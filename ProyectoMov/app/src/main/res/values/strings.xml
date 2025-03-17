@@ -25,6 +25,11 @@
     <string name="update_user_button">Actualizar</string>
     <string name="update_upload_image"><u>Cambiar foto de perfil...</u></string>
 
+
+    <string name="dashboard_legend">Gastos totales del mes:</string>
+
+
+
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
