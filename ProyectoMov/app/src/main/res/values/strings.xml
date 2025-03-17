@@ -21,6 +21,9 @@
     <string name="login_hyperlink"><u>Regístrate aquí.</u></string>
 
 
+    <string name="update_user_title">ACTUALIZAR INFORMACIÓN</string>
+    <string name="update_user_button">Actualizar</string>
+    <string name="update_upload_image"><u>Cambiar foto de perfil...</u></string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

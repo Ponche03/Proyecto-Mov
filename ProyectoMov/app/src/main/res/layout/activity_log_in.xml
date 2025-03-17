@@ -14,7 +14,7 @@
         android:layout_height="70dp"
         android:layout_marginTop="60dp"
         android:contentDescription="icon"
-        android:src="@drawable/image"
+        android:src="@drawable/logo"
         app:layout_constraintBottom_toTopOf="@+id/login_card"
         app:layout_constraintEnd_toStartOf="@+id/app_name"
         app:layout_constraintHorizontal_bias="0.733"
