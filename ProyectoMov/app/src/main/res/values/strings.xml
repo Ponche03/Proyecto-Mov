@@ -5,7 +5,8 @@
     <string name="email_hint">Correo Electrónico</string>
     <string name="password_hint">Contraseña</string>
     <string name="login_button">Ingresar</string>
-    <string name="register_text">¿No tienes cuenta? <u>Regístrate aquí.</u></string>
+    <string name="register_text">¿No tienes cuenta?</string>
+    <string name="register_hyperlink"><u>Regístrate aquí.</u></string>
     <string name="title_activity_log_in">LogIn</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
