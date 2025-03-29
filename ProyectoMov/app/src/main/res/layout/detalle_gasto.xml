@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_blue">
+
+    <ImageView
+        android:id="@+id/app_icon4"
+        android:layout_width="30dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="36dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/menu_icon"
+        app:layout_constraintEnd_toStartOf="@+id/profile_picture"
+        app:layout_constraintHorizontal_bias="0.004"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/profile_picture4"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="36dp"
+        android:background="@drawable/rounded_background"
+        android:scaleType="centerCrop"
+        android:src="@drawable/david_lynch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.858"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="48dp"
+        tools:layout_editor_absoluteY="76dp">
+
+        <TextView
+            android:id="@+id/amount4"
+            android:layout_width="371dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="124dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Detalle_gastos_title"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.6"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount5"
+            android:layout_width="370dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="172dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Detalle_gastos_monto"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.609"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount6"
+            android:layout_width="369dp"
+            android:layout_height="41dp"
+            android:layout_marginTop="220dp"
+            android:fontFamily="@font/poppins_light"
+            android:text="@string/Detalle_gastos_fecha"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.619"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount7"
+            android:layout_width="373dp"
+            android:layout_height="41dp"
+            android:layout_marginTop="296dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Detalle_gastos_TDescripcion"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.684"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount8"
+            android:layout_width="373dp"
+            android:layout_height="41dp"
+            android:layout_marginTop="328dp"
+            android:fontFamily="@font/poppins_light"
+            android:text="@string/Detalle_gastos_Descripcion"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.684"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount9"
+            android:layout_width="374dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="404dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Detalle_gastos_Ttipo"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.513"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount10"
+            android:layout_width="370dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="432dp"
+            android:fontFamily="@font/poppins_light"
+            android:text="@string/Detalle_gastos_tipo"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.487"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount11"
+            android:layout_width="370dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="496dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Detalle_gastos_Tarchi_adjunto"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.487"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/amount12"
+            android:layout_width="370dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="532dp"
+            android:fontFamily="@font/poppins_light"
+            android:text="@string/Detalle_gastos_nombre_archivo"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.487"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/flecha_blanca"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

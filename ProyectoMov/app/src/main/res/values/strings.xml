@@ -29,6 +29,45 @@
     <string name="dashboard_legend">Gastos totales del mes:</string>
 
 
+    <string name="Boton_Registrar">Registrar</string>
+    <!-- Pantalla de Registrar gastos-->
+    <string name="Registrar_Gasto">Registo de gastos</string>
+    <string name="Registrar_Gasto_Nombre">Nombre del gasto:</string>
+    <string name="Registrar_Gasto_Monto">Monto del gasto:</string>
+    <string name="Registrar_Gasto_Descripcion">Descripcion del gasto:</string>
+    <string name="Registrar_Gasto_tipodepago">tipos del gastos:</string>
+    <string-array name="pagos_array">
+        <item>tipos del gastos:</item>
+        <item>Efectivo</item>
+        <item>Credito</item>
+    </string-array>
+
+    <!-- Pantalla de Registrar ingreso-->
+    <string name="Registrar_ingreso">Registo de gastos</string>
+    <string name="Registrar_ingreso_Nombre">Nombre del gasto:</string>
+    <string name="Registrar_ingreso_Monto">Monto del gasto:</string>
+    <string name="Registrar_ingreso_Descripcion">Descripcion del gasto:</string>
+    <string name="Registrar_ingreso_tipodepago">tipos del gastos:</string>
+    <string-array name="ingreso_agos_array">
+        <item>tipos del ingreso:</item>
+        <item>Efectivo</item>
+        <item>Credito</item>
+    </string-array>
+
+
+
+    <!-- Pantalla de Detalles de gastos-->
+    <string name="Detalle_gastos_title">Gastos</string>
+    <string name="Detalle_gastos_monto">4000</string>
+    <string name="Detalle_gastos_fecha">3 de febrero del 2023</string>
+    <string name="Detalle_gastos_TDescripcion">Descripcion:</string>
+    <string name="Detalle_gastos_Descripcion">Compra de amazon</string>
+    <string name="Detalle_gastos_Ttipo">Tipo de Gasto:</string>
+    <string name="Detalle_gastos_tipo">Efectivo</string>
+    <string name="Detalle_gastos_Tarchi_adjunto">Archivo Adjunto:</string>
+    <string name="Detalle_gastos_nombre_archivo">Imagen.jpg</string>
+
+
 
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
