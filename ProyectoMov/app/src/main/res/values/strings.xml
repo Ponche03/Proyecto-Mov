@@ -68,6 +68,14 @@
     <string name="Detalle_gastos_nombre_archivo">Imagen.jpg</string>
 
 
+    <!-- Pantalla de Reportes-->
+    <string name="Reportes_fecha">Fecha:</string>
+    <string name="Reportes_filtrar">filtrar po:</string>
+    <string name="Reportes_filtrar1">Tipo de gasto</string>
+    <string name="Reportes_comida">Comida</string>
+    <string name="Reportes_fijos">Gastos fijos</string>
+    <string name="Reportes_transporte">Trasnporte</string>
+    <string name="Reportes_total">Total:1700</string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
