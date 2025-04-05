@@ -7,24 +7,35 @@
     android:background="@color/dark_blue">
 
     <ImageView
-        android:id="@+id/app_icon2"
+        android:id="@+id/app_icon3"
         android:layout_width="30dp"
         android:layout_height="32dp"
         android:layout_marginStart="48dp"
         android:layout_marginTop="36dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/menu_icon"
-        app:layout_constraintEnd_toStartOf="@+id/profile_picture"
+        android:src="@drawable/icono_menu"
+        app:layout_constraintBottom_toTopOf="@+id/imageView"
+        app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintHorizontal_bias="0.004"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/flecha_blanca"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="42dp"
+        android:layout_marginTop="76dp"/>
 
     <ImageView
         android:id="@+id/profile_picture2"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="36dp"
-        android:background="@drawable/rounded_background"
+        android:background="@drawable/redondeo_background"
         android:scaleType="centerCrop"
         android:src="@drawable/david_lynch"
         app:layout_constraintEnd_toEndOf="parent"
@@ -32,18 +43,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/amount2"
+        android:layout_width="369dp"
+        android:layout_height="65dp"
+        android:layout_marginBottom="28dp"
+        android:fontFamily="@font/poppins_bold"
+        android:text="@string/Registrar_ingreso"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@color/white"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="310dp"
         android:layout_height="432dp"
-        android:layout_marginBottom="64dp"
-        android:background="@drawable/form_background"
+        android:layout_marginBottom="60dp"
+        android:background="@drawable/formulario_background"
         android:padding="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_bias="0.385">
+        app:layout_constraintHorizontal_bias="0.475"
+        app:layout_constraintStart_toStartOf="parent">
 
 
         <!-- First input stays at top -->
@@ -55,7 +82,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/input_background"
             android:fontFamily="@font/poppins"
-            android:hint="@string/Registrar_Gasto_Nombre"
+            android:hint="@string/Registrar_ingreso_Nombre"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -69,7 +96,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/input_background"
             android:fontFamily="@font/poppins"
-            android:hint="@string/Registrar_Gasto_Monto"
+            android:hint="@string/Registrar_ingreso_Monto"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -83,7 +110,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/input_background"
             android:fontFamily="@font/poppins"
-            android:hint="@string/Registrar_Gasto_Descripcion"
+            android:hint="@string/Registrar_ingreso_Descripcion"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -105,6 +132,8 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.584" />
 
+
+
         <TextView
             android:id="@+id/profilepicture_text"
             android:layout_width="wrap_content"
@@ -122,7 +151,7 @@
             android:id="@+id/btn_login"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="36dp"
             android:backgroundTint="@color/bright_green"
             android:fontFamily="@font/poppins_medium"
             android:padding="9dp"
@@ -130,7 +159,6 @@
             android:textColor="@color/black"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/profilepicture_text" />
 
@@ -138,42 +166,13 @@
             android:id="@+id/imageView5"
             android:layout_width="26dp"
             android:layout_height="28dp"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="268dp"
+            app:srcCompat="@drawable/clip_de_papel"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/clip_de_papel" />
+            android:layout_marginStart="53dp"
+            android:layout_marginTop="269dp"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <TextView
-        android:id="@+id/amount2"
-        android:layout_width="369dp"
-        android:layout_height="65dp"
-        android:layout_marginBottom="36dp"
-        android:fontFamily="@font/poppins_bold"
-        android:text="@string/Registrar_Gasto"
-        android:textAlignment="center"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textColor="@color/white"
-        android:textSize="25sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_margin="24dp" />
-
-    <ImageView
-        android:id="@+id/imageView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.112"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.109"
-        app:srcCompat="@drawable/flecha_blanca" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

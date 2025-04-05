@@ -13,7 +13,7 @@
         android:layout_marginStart="48dp"
         android:layout_marginTop="36dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/menu_icon"
+        android:src="@drawable/icono_menu"
         app:layout_constraintHorizontal_bias="0.004"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -23,7 +23,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="36dp"
-        android:background="@drawable/rounded_background"
+        android:background="@drawable/redondeo_background"
         android:scaleType="centerCrop"
         android:src="@drawable/david_lynch"
         app:layout_constraintEnd_toEndOf="parent"
@@ -65,25 +65,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.567"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_margin="24dp"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/amount15"
-            android:layout_width="374dp"
-            android:layout_height="36dp"
-            android:layout_marginTop="640dp"
-            android:fontFamily="@font/poppins_bold"
-            android:text="@string/Reportes_total"
-            android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.432"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_margin="24dp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -101,14 +82,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.619"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_margin="24dp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/amount16"
             android:layout_width="369dp"
             android:layout_height="41dp"
-            android:layout_marginTop="524dp"
+            android:layout_marginTop="548dp"
             android:fontFamily="@font/poppins_light"
             android:text="@string/Reportes_fijos"
             android:textAlignment="center"
@@ -117,34 +97,31 @@
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.38"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_margin="24dp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/amount18"
-            android:layout_width="369dp"
-            android:layout_height="41dp"
-            android:layout_marginTop="580dp"
-            android:fontFamily="@font/poppins_light"
-            android:text="@string/Reportes_transporte"
+            android:id="@+id/amount15"
+            android:layout_width="364dp"
+            android:layout_height="37dp"
+            android:layout_marginTop="664dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Reportes_total"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/white"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.38"
+            app:layout_constraintHorizontal_bias="0.567"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_margin="24dp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/amount17"
             android:layout_width="369dp"
             android:layout_height="41dp"
-            android:layout_marginTop="472dp"
+            android:layout_marginTop="496dp"
             android:fontFamily="@font/poppins_light"
             android:text="@string/Reportes_comida"
             android:textAlignment="center"
@@ -153,9 +130,57 @@
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.38"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_margin="24dp"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView7"
+            android:layout_width="23dp"
+            android:layout_height="21dp"
+            app:layout_constraintBottom_toBottomOf="@+id/amount16"
+            app:layout_constraintEnd_toEndOf="@+id/amount16"
+            app:layout_constraintHorizontal_bias="0.274"
+            app:layout_constraintStart_toStartOf="@+id/amount16"
+            app:layout_constraintTop_toTopOf="@+id/amount16"
+            app:srcCompat="@drawable/ic_launcher_background" />
+
+        <ImageView
+            android:id="@+id/imageView8"
+            android:layout_width="22dp"
+            android:layout_height="23dp"
+            app:layout_constraintBottom_toBottomOf="@+id/amount18"
+            app:layout_constraintEnd_toEndOf="@+id/amount18"
+            app:layout_constraintHorizontal_bias="0.273"
+            app:layout_constraintStart_toStartOf="@+id/amount18"
+            app:layout_constraintTop_toTopOf="@+id/amount18"
+            app:srcCompat="@drawable/color_morado" />
+
+        <ImageView
+            android:id="@+id/imageView9"
+            android:layout_width="26dp"
+            android:layout_height="24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/amount17"
+            app:layout_constraintEnd_toEndOf="@+id/amount17"
+            app:layout_constraintHorizontal_bias="0.276"
+            app:layout_constraintStart_toStartOf="@+id/amount17"
+            app:layout_constraintTop_toTopOf="@+id/amount17"
+            app:layout_constraintVertical_bias="0.588"
+            app:srcCompat="@drawable/color_rojo" />
+
+        <TextView
+            android:id="@+id/amount18"
+            android:layout_width="369dp"
+            android:layout_height="41dp"
+            android:layout_marginTop="604dp"
+            android:fontFamily="@font/poppins_light"
+            android:text="@string/Reportes_transporte"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Spinner
@@ -194,33 +219,11 @@
             android:id="@+id/imageView6"
             android:layout_width="142dp"
             android:layout_height="135dp"
-            app:srcCompat="@drawable/grafico_circularc_colores"
-            tools:layout_editor_absoluteX="134dp"
-            tools:layout_editor_absoluteY="325dp" />
-
-        <ImageView
-            android:id="@+id/imageView7"
-            android:layout_width="23dp"
-            android:layout_height="21dp"
-            app:srcCompat="@drawable/ic_launcher_background"
-            tools:layout_editor_absoluteX="111dp"
-            tools:layout_editor_absoluteY="524dp" />
-
-        <ImageView
-            android:id="@+id/imageView8"
-            android:layout_width="22dp"
-            android:layout_height="23dp"
-            app:srcCompat="@drawable/morado"
-            tools:layout_editor_absoluteX="112dp"
-            tools:layout_editor_absoluteY="580dp" />
-
-        <ImageView
-            android:id="@+id/imageView9"
-            android:layout_width="26dp"
-            android:layout_height="24dp"
-            app:srcCompat="@drawable/rojo"
-            tools:layout_editor_absoluteX="111dp"
-            tools:layout_editor_absoluteY="472dp" />
+            app:layout_constraintBottom_toTopOf="@+id/amount17"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/spinner2"
+            app:srcCompat="@drawable/grafico_circular" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

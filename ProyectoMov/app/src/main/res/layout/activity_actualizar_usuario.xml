@@ -8,41 +8,44 @@
     android:background="@color/dark_blue"
     tools:context=".LogIn">
 
-    <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="28dp"
-        android:layout_height="31dp"
-        android:layout_marginStart="56dp"
-        android:layout_marginTop="76dp"
-        android:src="@drawable/flecha_blanca"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/app_icon"
+        android:id="@+id/imageView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.152"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.076"
+        app:srcCompat="@drawable/flecha_blanca" />
+
+    <ImageView
+        android:id="@+id/app_icon4"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_marginStart="56dp"
-        android:layout_marginTop="48dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/menu_icon"
-        app:layout_constraintEnd_toStartOf="@+id/profile_picture"
-        app:layout_constraintHorizontal_bias="0.004"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:src="@drawable/icono_menu"
+        app:layout_constraintBottom_toTopOf="@+id/imageView4"
+        app:layout_constraintEnd_toEndOf="@+id/imageView4"
+        app:layout_constraintStart_toStartOf="@+id/imageView4"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8" />
 
     <ImageView
         android:id="@+id/profile_picture"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginTop="36dp"
-        android:background="@drawable/rounded_background"
+        android:background="@drawable/redondeo_background"
         android:scaleType="centerCrop"
         android:src="@drawable/david_lynch"
+        app:layout_constraintBottom_toTopOf="@+id/amount"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.858"
+        app:layout_constraintHorizontal_bias="0.822"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.45" />
 
     <TextView
         android:id="@+id/amount"
@@ -57,7 +60,6 @@
         android:textSize="44sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_margin="24dp"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.cardview.widget.CardView
@@ -71,7 +73,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_margin="24dp"
         app:layout_constraintTop_toTopOf="parent">
 
     </androidx.cardview.widget.CardView>
@@ -80,7 +81,7 @@
         android:id="@+id/constraintLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/form_background"
+        android:background="@drawable/formulario_background"
         android:padding="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -100,7 +101,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" /> <!-- First input stays at top -->
+            app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
             android:id="@+id/username"
@@ -114,7 +115,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fullname" /> <!-- Now below fullname -->
+            app:layout_constraintTop_toBottomOf="@id/fullname" />
 
         <EditText
             android:id="@+id/email"
@@ -128,7 +129,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/username" /> <!-- Now below username -->
+            app:layout_constraintTop_toBottomOf="@id/username" />
 
         <EditText
             android:id="@+id/password"
@@ -143,7 +144,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/email" /> <!-- Now below email -->
+            app:layout_constraintTop_toBottomOf="@id/email" />
 
 
         <TextView

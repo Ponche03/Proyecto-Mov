@@ -26,8 +26,12 @@
     <string name="update_upload_image"><u>Cambiar foto de perfil...</u></string>
 
 
+    <!-- Dashboard -->
     <string name="dashboard_legend">Gastos totales del mes:</string>
-
+    <string name="dashboard_gasto_total">8000.00</string>
+    <string name="dashboard_detalle_fecha">3 de marzo, 2025</string>
+    <string name="dashboard_detalle_nombre">Compras</string>
+    <string name="dashboard_detalle_cantidad">4000</string>
 
     <string name="Boton_Registrar">Registrar</string>
     <!-- Pantalla de Registrar gastos-->
@@ -75,7 +79,7 @@
     <string name="Reportes_comida">Comida</string>
     <string name="Reportes_fijos">Gastos fijos</string>
     <string name="Reportes_transporte">Trasnporte</string>
-    <string name="Reportes_total">Total:1700</string>
+    <string name="Reportes_total">Total: 1700</string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

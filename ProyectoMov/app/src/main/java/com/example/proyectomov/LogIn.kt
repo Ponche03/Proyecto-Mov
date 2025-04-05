@@ -7,18 +7,14 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.example.proyectomov.databinding.ActivityLogInBinding
+
 
 class LogIn : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var binding: ActivityLogInBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-     binding = ActivityLogInBinding.inflate(layoutInflater)
-     setContentView(binding.root)
+        super.onCreate(savedInstanceState) 
 
 
     }
