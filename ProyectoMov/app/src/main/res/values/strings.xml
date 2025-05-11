@@ -15,6 +15,8 @@
     <string name="upload_image"><u>Subir foto de perfil...</u></string>
 
 
+    <string name="adjuntar_Archivo"><u>Adjuntar archivo...</u></string>
+
     <string name="register_button">Registrarse</string>
     <string name="login_text">¿Tienes cuenta?</string>
     <string name="login_hyperlink"><u>Inicia sesión aquí.</u></string>
@@ -35,28 +37,43 @@
     <string name="Boton_Registrar">Registrar</string>
 
     <!-- Pantalla de Registrar gastos-->
-    <string name="Registrar_Gasto">Registo de gastos</string>
-    <string name="Registrar_Gasto_Nombre">Nombre del gasto:</string>
-    <string name="Registrar_Gasto_Monto">Monto del gasto:</string>
-    <string name="Registrar_Gasto_Descripcion">Descripcion del gasto:</string>
-    <string name="Registrar_Gasto_tipodepago">tipos del gastos:</string>
-    <string-array name="pagos_array">
-        <item>tipos del gastos:</item>
-        <item>Efectivo</item>
-        <item>Credito</item>
+    <string name="Registrar_Gasto">Registo de <u>Gasto</u></string>
+    <string name="Registrar_Gasto_Nombre">Nombre del Gasto:</string>
+    <string name="Registrar_Gasto_Monto">Monto del Gasto:</string>
+    <string name="Registrar_Gasto_Descripcion">Descripción del Gasto:</string>
+    <string name="Registrar_Gasto_tipodepago">Tipo de Gasto:</string>
+    <string-array name="categorias_gasto_array">
+        <item>Comida</item>
+        <item>Transporte</item>
+        <item>Servicios</item>
+        <item>Renta</item>
+        <item>Entretenimiento</item>
+        <item>Salud</item>
+        <item>Educación</item>
+        <item>Compras</item>
+        <item>Impuestos</item>
+        <item>Otros</item>
     </string-array>
 
     <!-- Pantalla de Registrar ingreso-->
-    <string name="Registrar_ingreso">Registo de gastos</string>
-    <string name="Registrar_ingreso_Nombre">Nombre del gasto:</string>
-    <string name="Registrar_ingreso_Monto">Monto del gasto:</string>
-    <string name="Registrar_ingreso_Descripcion">Descripcion del gasto:</string>
-    <string name="Registrar_ingreso_tipodepago">tipos del gastos:</string>
-    <string-array name="ingreso_agos_array">
-        <item>tipos del ingreso:</item>
-        <item>Efectivo</item>
-        <item>Credito</item>
+    <string name="Registrar_ingreso">Registo de <u>Ingreso</u></string>
+    <string name="Registrar_ingreso_Nombre">Nombre del Ingreso:</string>
+    <string name="Registrar_ingreso_Monto">Monto del Ingreso:</string>
+    <string name="Registrar_ingreso_Descripcion">Descripción del Ingreso:</string>
+    <string name="Registrar_ingreso_tipodeingreso">Tipo de Ingreso:</string>
+    <string-array name="ingreso_categoria_array">
+        <item>Nómina</item>
+        <item>Freelance</item>
+        <item>Ventas</item>
+        <item>Intereses Bancarios</item>
+        <item>Inversiones</item>
+        <item>Alquiler de Propiedades</item>
+        <item>Regalías</item>
+        <item>Premios o Sorteos</item>
+        <item>Devoluciones o Reembolsos</item>
+        <item>Otros</item>
     </string-array>
+
 
 
 
@@ -124,4 +141,11 @@
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
     <string name="title_activity_register">register</string>
+
+
+    <!-- Filtros -->
+    <string name="filtro_fecha">Febrero, 2025</string>
+
+
+    <string name="base_url">https://api-moviles-1k4o.onrender.com/api</string>
 </resources>

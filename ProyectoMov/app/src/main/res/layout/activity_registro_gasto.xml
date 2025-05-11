@@ -6,42 +6,17 @@
     android:layout_height="match_parent"
     android:background="@color/dark_blue">
 
-    <ImageView
-        android:id="@+id/app_icon3"
-        android:layout_width="30dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="48dp"
-        android:layout_marginTop="36dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/icono_menu"
-        app:layout_constraintBottom_toTopOf="@+id/imageView"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
-        app:layout_constraintHorizontal_bias="0.004"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/flecha_blanca"
+        app:layout_constraintBottom_toTopOf="@+id/amount2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="42dp"
-        android:layout_marginTop="76dp"/>
-
-    <ImageView
-        android:id="@+id/profile_picture2"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="36dp"
-        android:background="@drawable/redondeo_background"
-        android:scaleType="centerCrop"
-        android:src="@drawable/david_lynch"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.858"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:srcCompat="@drawable/flecha_blanca" />
 
     <TextView
         android:id="@+id/amount2"
@@ -49,7 +24,7 @@
         android:layout_height="65dp"
         android:layout_marginBottom="28dp"
         android:fontFamily="@font/poppins_bold"
-        android:text="@string/Registrar_ingreso"
+        android:text="@string/Registrar_Gasto"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="@color/white"
@@ -58,22 +33,21 @@
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8"  />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"
         android:layout_width="310dp"
         android:layout_height="432dp"
-        android:layout_marginBottom="60dp"
         android:background="@drawable/formulario_background"
         android:padding="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.475"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.7">
 
-
-        <!-- First input stays at top -->
 
         <EditText
             android:id="@+id/fullname"
@@ -82,7 +56,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/input_background"
             android:fontFamily="@font/poppins"
-            android:hint="@string/Registrar_ingreso_Nombre"
+            android:hint="@string/Registrar_Gasto_Nombre"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -96,12 +70,12 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/input_background"
             android:fontFamily="@font/poppins"
-            android:hint="@string/Registrar_ingreso_Monto"
+            android:hint="@string/Registrar_Gasto_Monto"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fullname" /> <!-- Now below fullname -->
+            app:layout_constraintTop_toBottomOf="@id/fullname" />
 
         <EditText
             android:id="@+id/email"
@@ -110,18 +84,18 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/input_background"
             android:fontFamily="@font/poppins"
-            android:hint="@string/Registrar_ingreso_Descripcion"
+            android:hint="@string/Registrar_Gasto_Descripcion"
             android:padding="12dp"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/username" /> <!-- Now below username -->
+            app:layout_constraintTop_toBottomOf="@id/username" />
 
         <Spinner
             android:id="@+id/spinner"
             android:layout_width="250dp"
             android:layout_height="48dp"
-            android:fontFamily="@font/poppins_bold"
+            android:fontFamily="@font/poppins"
             android:padding="12dp"
             android:textAlignment="center"
             android:textSize="16sp"
@@ -133,12 +107,11 @@
             app:layout_constraintVertical_bias="0.584" />
 
 
-
         <TextView
             android:id="@+id/profilepicture_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Adjuntar archivo"
+            android:text="@string/adjuntar_Archivo"
             android:textColor="@color/black"
             android:textSize="14sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -164,13 +137,14 @@
 
         <ImageView
             android:id="@+id/imageView5"
-            android:layout_width="26dp"
-            android:layout_height="28dp"
-            app:srcCompat="@drawable/clip_de_papel"
+            android:layout_width="20dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="53dp"
+            android:layout_marginTop="269dp"
+            app:layout_constraintBottom_toBottomOf="@+id/profilepicture_text"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="53dp"
-            android:layout_marginTop="269dp"/>
+            app:srcCompat="@drawable/clip_de_papel" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

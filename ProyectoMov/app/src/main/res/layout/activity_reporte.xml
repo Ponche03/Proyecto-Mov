@@ -7,44 +7,23 @@
     android:background="@color/dark_blue">
 
     <ImageView
-        android:id="@+id/app_icon3"
-        android:layout_width="30dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="48dp"
-        android:layout_marginTop="36dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/icono_menu"
-        app:layout_constraintHorizontal_bias="0.004"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/profile_picture3"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="36dp"
-        android:background="@drawable/redondeo_background"
-        android:scaleType="centerCrop"
-        android:src="@drawable/david_lynch"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.858"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/imageView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/flecha_blanca"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.152"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="42dp"
-        android:layout_marginTop="76dp"/>
+        app:layout_constraintVertical_bias="0.076"
+        app:srcCompat="@drawable/flecha_blanca" />
+
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteX="-16dp"
         tools:layout_editor_absoluteY="0dp">
 
         <!-- Now below email -->
