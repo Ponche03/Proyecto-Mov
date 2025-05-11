@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val intent = Intent(this, LogIn::class.java)//cambiamos a fragment de login
+        val intent = Intent(this, LogIn::class.java)
         startActivity(intent)
 
         //enableEdgeToEdge()

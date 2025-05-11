@@ -130,7 +130,7 @@
             app:layout_constraintTop_toBottomOf="@id/password" />
 
         <TextView
-            android:id="@+id/register_text"
+            android:id="@+id/logIn_link"
             android:layout_width="137dp"
             android:layout_height="19dp"
             android:layout_marginTop="16dp"

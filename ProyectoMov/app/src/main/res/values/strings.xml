@@ -9,7 +9,6 @@
     <string name="register_hyperlink"><u>Regístrate aquí.</u></string>
     <string name="title_activity_log_in">LogIn</string>
 
-
     <string name="register_title">REGISTRARSE</string>
     <string name="username_hint">Nombre de usuario</string>
     <string name="fullname_hint">Nombre Completo</string>
@@ -17,8 +16,8 @@
 
 
     <string name="register_button">Registrarse</string>
-    <string name="login_text">¿No tienes cuenta?</string>
-    <string name="login_hyperlink"><u>Regístrate aquí.</u></string>
+    <string name="login_text">¿Tienes cuenta?</string>
+    <string name="login_hyperlink"><u>Inicia sesión aquí.</u></string>
 
 
     <string name="update_user_title">ACTUALIZAR INFORMACIÓN</string>
@@ -34,6 +33,7 @@
     <string name="dashboard_detalle_cantidad">4000</string>
 
     <string name="Boton_Registrar">Registrar</string>
+
     <!-- Pantalla de Registrar gastos-->
     <string name="Registrar_Gasto">Registo de gastos</string>
     <string name="Registrar_Gasto_Nombre">Nombre del gasto:</string>
@@ -61,7 +61,7 @@
 
 
     <!-- Pantalla de Detalles de gastos-->
-    <string name="Detalle_gastos_title">Gastos</string>
+    <string name="Detalle_gastos_title">Gasto</string>
     <string name="Detalle_gastos_monto">4000</string>
     <string name="Detalle_gastos_fecha">3 de febrero del 2023</string>
     <string name="Detalle_gastos_TDescripcion">Descripcion:</string>
@@ -74,7 +74,7 @@
 
     <!-- Pantalla de Reportes-->
     <string name="Reportes_fecha">Fecha:</string>
-    <string name="Reportes_filtrar">filtrar po:</string>
+    <string name="Reportes_filtrar">filtrar por:</string>
     <string name="Reportes_filtrar1">Tipo de gasto</string>
     <string name="Reportes_comida">Comida</string>
     <string name="Reportes_fijos">Gastos fijos</string>
