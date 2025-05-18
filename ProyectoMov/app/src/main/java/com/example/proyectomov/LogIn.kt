@@ -58,10 +58,14 @@ class LogIn : AppCompatActivity() {
 
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
+                // Llenar UsuarioGlobal
+                UsuarioGlobal.id = user?.optString("_id")
+                UsuarioGlobal.nombreCompleto = user?.optString("nombre")
+                UsuarioGlobal.nombreUsuario = user?.optString("usuario")
+                UsuarioGlobal.correo = user?.optString("email")
+                UsuarioGlobal.fotoPerfil = user?.optString("foto_perfil")
+
                 val intent = Intent(this, Dashboard::class.java)
-                intent.putExtra("usuario", user?.optString("usuario"))
-                intent.putExtra("fotoPerfil", user?.optString("foto_perfil"))
-                intent.putExtra("usuarioID", user?.optString("_id"))
                 startActivity(intent)
             },
             { error ->

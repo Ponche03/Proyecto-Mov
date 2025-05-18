@@ -37,10 +37,12 @@ class Dashboard : AppCompatActivity() {
             insets
         }
 
+
+        // Cargar imagen de perfil con el link.
         val profilePicture = findViewById<ImageView>(R.id.profile_picture)
 
-        val nombreUsuario = intent.getStringExtra("usuario")
-        val fotoPerfilUrl = intent.getStringExtra("fotoPerfil")
+        val nombre = UsuarioGlobal.nombreUsuario
+        val fotoPerfilUrl = UsuarioGlobal.fotoPerfil
 
         Glide.with(this)
             .load(fotoPerfilUrl)

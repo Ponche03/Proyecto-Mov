@@ -37,7 +37,7 @@
     <string name="Boton_Registrar">Registrar</string>
 
     <!-- Pantalla de Registrar gastos-->
-    <string name="Registrar_Gasto">Registo de <u>Gasto</u></string>
+    <string name="Registrar_Gasto">Registro de <u>Gasto</u></string>
     <string name="Registrar_Gasto_Nombre">Nombre del Gasto:</string>
     <string name="Registrar_Gasto_Monto">Monto del Gasto:</string>
     <string name="Registrar_Gasto_Descripcion">Descripción del Gasto:</string>
@@ -56,7 +56,7 @@
     </string-array>
 
     <!-- Pantalla de Registrar ingreso-->
-    <string name="Registrar_ingreso">Registo de <u>Ingreso</u></string>
+    <string name="Registrar_ingreso">Registro de <u>Ingreso</u></string>
     <string name="Registrar_ingreso_Nombre">Nombre del Ingreso:</string>
     <string name="Registrar_ingreso_Monto">Monto del Ingreso:</string>
     <string name="Registrar_ingreso_Descripcion">Descripción del Ingreso:</string>
