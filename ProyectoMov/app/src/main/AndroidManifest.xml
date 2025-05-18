@@ -51,7 +51,7 @@
         <activity android:name=".RegisterGasto" />
         <activity android:name=".RegisterIngreso" />
 
-        <activity android:name=".FilterRecords" />
+        <activity android:name=".FiltrarRegistros" />
 
         <meta-data
             android:name="preloaded_fonts"

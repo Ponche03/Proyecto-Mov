@@ -86,7 +86,19 @@
     <string name="Detalle_gastos_Ttipo">Tipo de Gasto:</string>
     <string name="Detalle_gastos_tipo">Efectivo</string>
     <string name="Detalle_gastos_Tarchi_adjunto">Archivo Adjunto:</string>
-    <string name="Detalle_gastos_nombre_archivo">Imagen.jpg</string>
+    <string name="Detalle_gastos_nombre_archivo"><u>Imagen.jpg</u></string>
+
+
+    <!-- Pantalla de Detalles de gastos-->
+    <string name="Detalle_ingresos_title">Ingreso</string>
+    <string name="Detalle_ingresos_monto">4000</string>
+    <string name="Detalle_ingresos_fecha">3 de febrero del 2023</string>
+    <string name="Detalle_ingresos_TDescripcion">Descripcion:</string>
+    <string name="Detalle_ingresos_Descripcion">Compra de amazon</string>
+    <string name="Detalle_ingresos_Ttipo">Tipo de Ingreso:</string>
+    <string name="Detalle_ingresos_tipo">Nómina</string>
+    <string name="Detalle_ingresos_Tarchi_adjunto">Archivo Adjunto:</string>
+    <string name="Detalle_ingresos_nombre_archivo"><u>Imagen.jpg</u></string>
 
 
     <!-- Pantalla de Reportes-->

@@ -50,7 +50,7 @@
 
 
         <EditText
-            android:id="@+id/fullname"
+            android:id="@+id/nombre_gasto"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -64,7 +64,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
-            android:id="@+id/username"
+            android:id="@+id/monto_gasto"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -75,10 +75,10 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fullname" />
+            app:layout_constraintTop_toBottomOf="@id/nombre_gasto" />
 
         <EditText
-            android:id="@+id/email"
+            android:id="@+id/descripcion_gasto"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -89,7 +89,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/username" />
+            app:layout_constraintTop_toBottomOf="@id/monto_gasto" />
 
         <Spinner
             android:id="@+id/spinner"
@@ -121,7 +121,7 @@
             app:layout_constraintVertical_bias="0.745" />
 
         <Button
-            android:id="@+id/btn_login"
+            android:id="@+id/btn_registrar"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"

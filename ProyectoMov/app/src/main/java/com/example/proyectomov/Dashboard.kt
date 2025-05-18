@@ -153,8 +153,16 @@ class Dashboard : AppCompatActivity() {
             }
         }
 
-        findViewById<Button>(R.id.btn_ver_registros).setOnClickListener {
-            val intent = Intent(this, FilterRecords::class.java)
+
+        findViewById<Button>(R.id.btn_ver_ingresos).setOnClickListener {
+            val intent = Intent(this, FiltrarRegistros::class.java)
+            intent.putExtra("tipo_filtro", "ingreso")  // <-- Envía "ingreso"
+            startActivity(intent)
+        }
+
+        findViewById<Button>(R.id.btn_ver_gastos).setOnClickListener {
+            val intent = Intent(this, FiltrarRegistros::class.java)
+            intent.putExtra("tipo_filtro", "gasto")  // <-- Envía "gasto"
             startActivity(intent)
         }
 

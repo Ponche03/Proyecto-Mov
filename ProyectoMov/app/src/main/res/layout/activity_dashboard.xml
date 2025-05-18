@@ -41,17 +41,31 @@
 
         <!-- Botones del menú -->
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_ver_registros"
+            android:id="@+id/btn_ver_gastos"
             android:layout_width="match_parent"
             android:layout_marginTop="8dp"
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_button_background"
             android:backgroundTint="@null"
             android:fontFamily="@font/poppins_medium"
-            android:text="Filtrar Registros"
+            android:text="Filtrar Gastos"
             android:textAllCaps="false"
             android:textColor="@android:color/black"
             android:textSize="12sp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_ver_ingresos"
+            android:layout_width="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_button_background"
+            android:backgroundTint="@null"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Filtrar Ingresos"
+            android:textAllCaps="false"
+            android:textColor="@android:color/black"
+            android:textSize="12sp" />
+
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_reporte"
