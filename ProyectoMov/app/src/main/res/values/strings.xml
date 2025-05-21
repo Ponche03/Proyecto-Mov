@@ -75,8 +75,6 @@
     </string-array>
 
 
-
-
     <!-- Pantalla de Detalles de gastos-->
     <string name="Detalle_gastos_title">Gasto</string>
     <string name="Detalle_gastos_monto">4000</string>
@@ -160,4 +158,6 @@
 
 
     <string name="base_url">https://api-moviles-1k4o.onrender.com/api</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

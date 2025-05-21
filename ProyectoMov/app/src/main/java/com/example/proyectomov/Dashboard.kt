@@ -161,7 +161,7 @@ class Dashboard : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btn_ver_gastos).setOnClickListener {
-            val intent = Intent(this, FiltrarRegistros::class.java)
+            val intent = Intent(this, FiltrarGasto::class.java)
             intent.putExtra("tipo_filtro", "gasto")  // <-- Envía "gasto"
             startActivity(intent)
         }
