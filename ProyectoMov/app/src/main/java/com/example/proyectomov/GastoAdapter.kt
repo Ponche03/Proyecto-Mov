@@ -1,5 +1,6 @@
 package com.example.proyectomov // Cambia esto si tu paquete es otro
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,6 +35,19 @@ class GastoAdapter(private val gastos: List<Gasto>) :
         holder.fecha.text = gasto.fecha
         holder.titulo.text = gasto.nombre
         holder.monto.text = "$%.2f".format(gasto.monto)
+
+        // Evento de clic para la tarjeta
+        holder.itemView.setOnClickListener {
+            val intent = Intent(holder.itemView.context, DetalleGasto::class.java).apply {
+                putExtra("titulo", gasto.nombre)
+                putExtra("monto", gasto.monto.toString())
+                putExtra("fecha", gasto.fecha)
+                putExtra("tipo", gasto.tipo)
+                putExtra("archivo", gasto.archivo)
+            }
+            holder.itemView.context.startActivity(intent)
+        }
+
     }
 
     override fun getItemCount(): Int = gastos.size
