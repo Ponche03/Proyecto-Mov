@@ -178,11 +178,11 @@ class RegisterGasto : AppCompatActivity() {
         val json = JSONObject()
         json.put("Id_user", usuarioID)
         json.put("Fecha", fecha)
-        json.put("Categoria", categoria)
         json.put("Monto", monto)
         json.put("Nombre", nombre)
+        json.put("Tipo", categoria)
         json.put("Descripcion", descripcion)
-        json.put("Archivo", archivoUrl)  // puede ser "" si no hay imagen
+        json.put("Archivo", archivoUrl)
 
         val requestQueue = Volley.newRequestQueue(this)
         val baseUrl = getString(R.string.base_url)
