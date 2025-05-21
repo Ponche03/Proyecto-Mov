@@ -18,11 +18,13 @@ import org.json.JSONObject
 import com.android.volley.toolbox.JsonObjectRequest
 import java.util.Calendar
 import android.app.DatePickerDialog
+import android.widget.ImageView
 
 
 class FiltrarRegistros : AppCompatActivity() {
 
     private var usuarioID: String = ""
+    private var pagina: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +33,23 @@ class FiltrarRegistros : AppCompatActivity() {
         usuarioID = UsuarioGlobal.id.toString()
 
         val textViewFecha = findViewById<TextView>(R.id.title2)
+
+        // Obtener referencias de las flechas
+        val rightArrow = findViewById<ImageView>(R.id.right_arrow)
+        val leftArrow = findViewById<ImageView>(R.id.left_arrow)
+
+        // Configurar listeners de clic para las flechas
+        rightArrow.setOnClickListener {
+            pagina++ // Incrementar la página
+            actualizarIngresos()
+        }
+
+        leftArrow.setOnClickListener {
+            if (pagina > 1) { // Asegurar que la página no sea menor que 1
+                pagina-- // Decrementar la página
+                actualizarIngresos()
+            }
+        }
 
         textViewFecha.setOnClickListener {
             mostrarDatePicker(textViewFecha)
@@ -49,7 +68,9 @@ class FiltrarRegistros : AppCompatActivity() {
             )
             val mesSeleccionado = nombresMeses[month] // Obtener el nombre del mes
             textViewFecha.text = "$mesSeleccionado/$year" // Actualizar el texto del TextView
-            obtenerIngresos(usuarioID, month + 1, year) // Pasar el número del mes a la función
+
+            pagina = 1 // Reiniciar a la primera página cuando cambia la fecha
+            obtenerIngresos(usuarioID, month + 1, year, pagina) // Llamar con mes y año numérico
         }, anio, mes, calendario.get(Calendar.DAY_OF_MONTH))
 
         datePickerDialog.show()
@@ -57,9 +78,9 @@ class FiltrarRegistros : AppCompatActivity() {
 
 
 
-    private fun obtenerIngresos(usuarioID: String, mes: Int, anio: Int) {
+    private fun obtenerIngresos(usuarioID: String, mes: Int, anio: Int,pagina:Int) {
         val baseUrl = getString(R.string.base_url)
-        val url = "$baseUrl/ingresos?usuarioID=$usuarioID&mes=$mes&anio=$anio&limite=4&pagina=1"
+        val url = "$baseUrl/ingresos?usuarioID=$usuarioID&mes=$mes&anio=$anio&limite=2&pagina=$pagina"
 
         val requestQueue = Volley.newRequestQueue(this)
 
@@ -102,6 +123,29 @@ class FiltrarRegistros : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewIngresos)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = IngresoAdapter(lista)
+    }
+
+    private fun actualizarIngresos() {
+        // Obtener fecha actual del textViewFecha
+        val textViewFecha = findViewById<TextView>(R.id.title2)
+        val fechaActual = textViewFecha.text.toString()
+
+        // Extraer mes y año de la fecha actual (ejemplo: "Mayo/2025")
+        val partesFecha = fechaActual.split("/")
+        val mes = partesFecha[0] // Mes en texto
+        val anio = partesFecha[1].toInt() // Año en número
+
+        // Obtener ingresos con la página actualizada
+        obtenerIngresos(usuarioID, obtenerNumeroMes(mes), anio, pagina)
+    }
+
+    // Función para convertir nombre del mes a número
+    private fun obtenerNumeroMes(nombreMes: String): Int {
+        val nombresMeses = arrayOf(
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        )
+        return nombresMeses.indexOf(nombreMes) + 1 // +1 porque los meses en Calendar son 1-indexed
     }
 
 }

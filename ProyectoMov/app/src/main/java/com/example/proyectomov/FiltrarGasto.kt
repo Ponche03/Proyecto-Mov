@@ -18,10 +18,13 @@ import org.json.JSONObject
 import com.android.volley.toolbox.JsonObjectRequest
 import java.util.Calendar
 import android.app.DatePickerDialog
+import android.widget.ImageView
 
 class FiltrarGasto : AppCompatActivity() {
 
     private var usuarioID: String = ""
+
+    private var pagina: Int = 1 // Página actual
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +36,22 @@ class FiltrarGasto : AppCompatActivity() {
 
         textViewFecha.setOnClickListener {
             mostrarDatePicker(textViewFecha)
+        }
+
+        // Flechas
+        val rightArrow = findViewById<ImageView>(R.id.right_arrow)
+        val leftArrow = findViewById<ImageView>(R.id.left_arrow)
+
+        rightArrow.setOnClickListener {
+            pagina++
+            actualizarGastos()
+        }
+
+        leftArrow.setOnClickListener {
+            if (pagina > 1) {
+                pagina--
+                actualizarGastos()
+            }
         }
     }
 
@@ -46,17 +65,41 @@ class FiltrarGasto : AppCompatActivity() {
                 "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
             )
-            val mesSeleccionado = nombresMeses[month] // Obtener el nombre del mes
-            textViewFecha.text = "$mesSeleccionado/$year" // Actualizar el texto del TextView
-            obtenerGasto(usuarioID, month + 1, year) // Pasar el número del mes a la función
+            val mesSeleccionado = nombresMeses[month]
+            textViewFecha.text = "$mesSeleccionado/$year"
+
+            pagina = 1 // Reiniciar página
+            obtenerGasto(usuarioID, month + 1, year, pagina)
         }, anio, mes, calendario.get(Calendar.DAY_OF_MONTH))
 
         datePickerDialog.show()
     }
 
-    private fun obtenerGasto(usuarioID: String, mes: Int, anio: Int) {
+    private fun actualizarGastos() {
+        val textViewFecha = findViewById<TextView>(R.id.title2)
+        val fechaActual = textViewFecha.text.toString()
+
+        if (fechaActual.contains("/")) {
+            val partes = fechaActual.split("/")
+            val mesTexto = partes[0]
+            val anio = partes[1].toInt()
+            val mes = obtenerNumeroMes(mesTexto)
+            obtenerGasto(usuarioID, mes, anio, pagina)
+        }
+    }
+
+    private fun obtenerNumeroMes(nombreMes: String): Int {
+        val nombresMeses = arrayOf(
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        )
+        return nombresMeses.indexOf(nombreMes) + 1
+    }
+
+
+    private fun obtenerGasto(usuarioID: String, mes: Int, anio: Int, pagina: Int) {
         val baseUrl = getString(R.string.base_url)
-        val url = "$baseUrl/api/gastos?usuarioID=$usuarioID&tipo=Regalo&montoMin=100&montoMax=5000&limite=10&pagina=1&mes=$mes&anio=$anio"
+        val url = "$baseUrl/gastos?usuarioID=$usuarioID&mes=$mes&anio=$anio&limite=2&pagina=$pagina"
 
         val requestQueue = Volley.newRequestQueue(this)
 
@@ -72,8 +115,8 @@ class FiltrarGasto : AppCompatActivity() {
 
                         val gasto = Gasto(
                             nombre = item.getString("Nombre"),
-                            fecha = item.getString("FechaLocal"),
-                            tipo = item.getString("Tipo"),
+                            fecha = item.getString("Fecha"),
+                            tipo = item.getString("Descripcion"),
                             monto = item.getDouble("Monto"),
                             archivo = item.optString("Archivo", "") // Manejo seguro si no hay archivo
                         )
