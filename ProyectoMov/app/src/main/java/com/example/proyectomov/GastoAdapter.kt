@@ -1,32 +1,30 @@
-package com.example.proyectomov // Cambia esto si tu paquete es otro
+package com.example.proyectomov
 
-import android.content.Intent
+import FactoryMethod.Gasto
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 
-data class Gasto(
-    val nombre: String,
-    val fecha: String,
-    val tipo: String,
-    val monto: Double,
-    val archivo: String
-)
 
-class GastoAdapter(private val gastos: List<Gasto>) :
-    RecyclerView.Adapter<GastoAdapter.GastoViewHolder>() {
+class GastoAdapter(
+    var gastos: MutableList<Gasto>,
+    private val onItemClicked: (Gasto) -> Unit
+) : RecyclerView.Adapter<GastoAdapter.GastoViewHolder>() {
 
     class GastoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val fecha: TextView = itemView.findViewById(R.id.fecha)
         val titulo: TextView = itemView.findViewById(R.id.titulo)
         val monto: TextView = itemView.findViewById(R.id.monto)
+        val iconoDocumento: ImageView = itemView.findViewById(R.id.icono_documento)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GastoViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_gasto, parent, false) // Asegúrate de que el layout es el correcto
+            .inflate(R.layout.item_gasto, parent, false)
         return GastoViewHolder(view)
     }
 
@@ -34,20 +32,17 @@ class GastoAdapter(private val gastos: List<Gasto>) :
         val gasto = gastos[position]
         holder.fecha.text = gasto.fecha
         holder.titulo.text = gasto.nombre
-        holder.monto.text = "$%.2f".format(gasto.monto)
+        holder.monto.text = String.format(Locale.getDefault(), "$%.2f", gasto.monto)
 
-        // Evento de clic para la tarjeta
-        holder.itemView.setOnClickListener {
-            val intent = Intent(holder.itemView.context, DetalleGasto::class.java).apply {
-                putExtra("titulo", gasto.nombre)
-                putExtra("monto", gasto.monto.toString())
-                putExtra("fecha", gasto.fecha)
-                putExtra("tipo", gasto.tipo)
-                putExtra("archivo", gasto.archivo)
-            }
-            holder.itemView.context.startActivity(intent)
+        if (!gasto.archivo.isNullOrEmpty()) {
+            holder.iconoDocumento.visibility = View.VISIBLE
+        } else {
+            holder.iconoDocumento.visibility = View.GONE
         }
 
+        holder.itemView.setOnClickListener {
+            onItemClicked(gasto)
+        }
     }
 
     override fun getItemCount(): Int = gastos.size

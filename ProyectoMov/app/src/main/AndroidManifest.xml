@@ -51,8 +51,7 @@
         <activity android:name=".RegisterGasto" />
         <activity android:name=".RegisterIngreso" />
 
-        <activity android:name=".FiltrarRegistros" />
-        <activity android:name=".FiltrarGasto" />
+        <activity android:name=".FiltrarTransacciones" />
         <activity android:name=".DetalleIngreso"/>
         <activity android:name=".DetalleGasto"/>
 
