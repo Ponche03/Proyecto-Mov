@@ -64,6 +64,7 @@ class LogIn : AppCompatActivity() {
                 UsuarioGlobal.nombreUsuario = user?.optString("usuario")
                 UsuarioGlobal.correo = user?.optString("email")
                 UsuarioGlobal.fotoPerfil = user?.optString("foto_perfil")
+                UsuarioGlobal.token = token
 
                 val intent = Intent(this, Dashboard::class.java)
                 startActivity(intent)
@@ -76,4 +77,5 @@ class LogIn : AppCompatActivity() {
         val queue = Volley.newRequestQueue(this)
         queue.add(request)
     }
+
 }

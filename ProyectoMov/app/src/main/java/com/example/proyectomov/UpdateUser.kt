@@ -1,5 +1,6 @@
 package com.example.proyectomov
 
+import UsuarioGlobal
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -7,65 +8,111 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.android.volley.Response
+import services.FirebaseStorageService
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
-import com.android.volley.Request
-import com.google.firebase.storage.FirebaseStorage
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 class UpdateUser : AppCompatActivity() {
 
-    private lateinit var fullname: EditText
-    private lateinit var username: EditText
-    private lateinit var passwordEdit: EditText
-    private lateinit var uploadText: TextView
-    private lateinit var selectedImageUri: Uri
+    private lateinit var fullnameEditText: EditText
+    private lateinit var usernameEditText: EditText
+    private lateinit var passwordEditText: EditText
+    private lateinit var uploadPictureTextView: TextView
+    private lateinit var btnUpdateUser: Button
+
+
+    private lateinit var botonRegresar: ImageView
+
+    private var selectedImageUri: Uri? = null
     private var userId: String? = null
 
     private val PICK_IMAGE_REQUEST = 1
     private val TAKE_PHOTO_REQUEST = 2
+    private var currentPhotoPath: String? = null
+
+    private val firebaseStorageService = FirebaseStorageService()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_actualizar_usuario)
 
-        fullname = findViewById(R.id.fullname)
-        username = findViewById(R.id.username)
-        passwordEdit = findViewById(R.id.password)
-        uploadText = findViewById(R.id.profilepicture_text)
-        val btnUpdate = findViewById<Button>(R.id.btn_login)
 
-        userId = intent.getStringExtra("usuarioID")
+        fullnameEditText = findViewById(R.id.fullname)
+        usernameEditText = findViewById(R.id.username)
+        passwordEditText = findViewById(R.id.password)
+        uploadPictureTextView = findViewById(R.id.profilepicture_text)
+        btnUpdateUser = findViewById(R.id.btn_login)
+        botonRegresar = findViewById(R.id.imageView4)
 
-        uploadText.setOnClickListener {
+        userId = UsuarioGlobal.id
+
+        fullnameEditText.setText(UsuarioGlobal.nombreCompleto)
+        usernameEditText.setText(UsuarioGlobal.nombreUsuario)
+
+        uploadPictureTextView.setOnClickListener {
             mostrarOpcionesDeImagen()
         }
 
-        btnUpdate.setOnClickListener {
-            if (::selectedImageUri.isInitialized) {
-                subirImagenAFirebase(selectedImageUri)
-            } else {
-                actualizarUsuario(null)
-            }
+        btnUpdateUser.setOnClickListener {
+            handleUserUpdate()
+        }
+
+        botonRegresar.setOnClickListener {
+            startActivity(Intent(this, Dashboard::class.java))
+            finish()
+        }
+    }
+
+    private fun handleUserUpdate() {
+        val nombre = fullnameEditText.text.toString().trim()
+        val usuario = usernameEditText.text.toString().trim()
+        val password = passwordEditText.text.toString().trim()
+
+        if (nombre.isEmpty() || usuario.isEmpty()) {
+            Toast.makeText(this, "Nombre completo y nombre de usuario no pueden estar vacíos.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, "Actualizando usuario...", Toast.LENGTH_SHORT).show()
+        btnUpdateUser.isEnabled = false
+
+        if (selectedImageUri != null) {
+            firebaseStorageService.uploadFile(
+                fileUri = selectedImageUri!!,
+                storagePath = "perfil_imagenes",
+                onSuccess = { newImageUrl ->
+                    actualizarUsuarioAPI(nombre, usuario, password, newImageUrl)
+                },
+                onFailure = { errorMessage ->
+                    Toast.makeText(this, "Error al subir nueva imagen: $errorMessage", Toast.LENGTH_LONG).show()
+                    btnUpdateUser.isEnabled = true
+                }
+            )
+        } else {
+            actualizarUsuarioAPI(nombre, usuario, password, null)
         }
     }
 
     private fun mostrarOpcionesDeImagen() {
         val opciones = arrayOf("Seleccionar desde Galería", "Tomar Foto")
-
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Selecciona una opción")
+        builder.setTitle("Cambiar foto de perfil")
         builder.setItems(opciones) { _, which ->
             when (which) {
                 0 -> abrirGaleria()
@@ -84,7 +131,7 @@ class UpdateUser : AppCompatActivity() {
     private fun tomarFoto() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (intent.resolveActivity(packageManager) != null) {
-            val photoFile = crearArchivoDeImagen()
+            val photoFile: File? = crearArchivoDeImagen()
             photoFile?.also {
                 val photoUri = FileProvider.getUriForFile(
                     this,
@@ -92,18 +139,25 @@ class UpdateUser : AppCompatActivity() {
                     it
                 )
                 selectedImageUri = photoUri
+                currentPhotoPath = it.absolutePath
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
                 startActivityForResult(intent, TAKE_PHOTO_REQUEST)
             }
+        } else {
+            Toast.makeText(this, "No se pudo acceder a la cámara.", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun crearArchivoDeImagen(): File? {
-        val nombreImagen = "foto_${UUID.randomUUID()}.jpg"
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val nombreImagen = "JPEG_${timeStamp}_${UUID.randomUUID()}.jpg"
         val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return try {
-            File.createTempFile(nombreImagen, ".jpg", storageDir)
+            File.createTempFile(nombreImagen, ".jpg", storageDir).apply {
+                currentPhotoPath = absolutePath
+            }
         } catch (e: IOException) {
+            Toast.makeText(this, "Error al crear archivo de imagen.", Toast.LENGTH_SHORT).show()
             null
         }
     }
@@ -113,75 +167,84 @@ class UpdateUser : AppCompatActivity() {
         if (resultCode == RESULT_OK) {
             when (requestCode) {
                 PICK_IMAGE_REQUEST -> {
-                    selectedImageUri = data?.data!!
-                    uploadText.text = "Imagen seleccionada."
+                    selectedImageUri = data?.data
+                    selectedImageUri?.let {
+                        uploadPictureTextView.text = "Nueva imagen: ${it.lastPathSegment ?: "seleccionada"}"
+                    }
                 }
                 TAKE_PHOTO_REQUEST -> {
-                    uploadText.text = "Foto tomada."
+                    uploadPictureTextView.text = "Nueva foto capturada."
                 }
             }
         }
     }
 
-    private fun subirImagenAFirebase(uri: Uri) {
-        val storageRef = FirebaseStorage.getInstance().reference.child("perfil_imagenes/${UUID.randomUUID()}")
-        storageRef.putFile(uri)
-            .addOnSuccessListener {
-                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    actualizarUsuario(downloadUri.toString())
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Error al subir imagen.", Toast.LENGTH_SHORT).show()
-            }
-    }
+    private fun actualizarUsuarioAPI(nombreCompleto: String, nombreUsuario: String, passwordInput: String, newImageUrl: String?) {
+        if (userId == null) {
+            Toast.makeText(this, "Error: ID de usuario no disponible.", Toast.LENGTH_LONG).show()
+            btnUpdateUser.isEnabled = true
+            return
+        }
 
-    private fun actualizarUsuario(imageUrl: String?) {
-        val nombre = fullname.text.toString()
-        val usuario = username.text.toString()
-        val password = passwordEdit.text.toString()
+        val jsonBody = JSONObject().apply {
+            put("Nombre_Completo", nombreCompleto)
+            put("Nombre_Usuario", nombreUsuario)
 
-        val json = JSONObject()
-        json.put("nombre", nombre)
-        json.put("usuario", usuario)
-        json.put("password", password)
-        if (imageUrl != null) json.put("foto_perfil", imageUrl)
+            if (passwordInput.isNotBlank()) {
+                put("password", passwordInput)
+            }
+            newImageUrl?.let {
+                put("Foto", it)
+            }
+        }
 
         val requestQueue = Volley.newRequestQueue(this)
-
         val baseUrl = getString(R.string.base_url)
         val apiUrl = "$baseUrl/users/$userId"
 
-        val request = JsonObjectRequest(Request.Method.PUT, apiUrl, json,
-            { response ->
-                val message = response.optString("message")
-                val usuario = response.optJSONObject("usuario")
+        val jsonObjectRequestWithAuth = object : JsonObjectRequest(
+            Method.PUT,
+            apiUrl,
+            jsonBody,
+            Response.Listener { response ->
+                val message = response.optString("message", "Usuario actualizado correctamente.")
+                val updatedUser = response.optJSONObject("usuario")
 
-                // Obtener datos del usuario
-                val id = usuario?.optString("_id")
-                val correo = usuario?.optString("Correo")
-                val nombreUsuario = usuario?.optString("Nombre_Usuario")
-                val nombreCompleto = usuario?.optString("Nombre_Completo")
-                val fotoPerfil = usuario?.optString("Foto")
-
-                // Mostrar mensaje de éxito
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
-                // Ir a otra pantalla (ejemplo: Dashboard) con los datos del usuario
-                val intent = Intent(this, Dashboard::class.java)
-                intent.putExtra("usuarioID", id)
-                intent.putExtra("correo", correo)
-                intent.putExtra("usuario", nombreUsuario)
-                intent.putExtra("nombreCompleto", nombreCompleto)
-                intent.putExtra("fotoPerfil", fotoPerfil)
-                startActivity(intent)
+                updatedUser?.let {
+                    UsuarioGlobal.id = it.optString("_id", UsuarioGlobal.id)
+                    UsuarioGlobal.nombreCompleto = it.optString("Nombre_Completo", UsuarioGlobal.nombreCompleto)
+                    UsuarioGlobal.nombreUsuario = it.optString("Nombre_Usuario", UsuarioGlobal.nombreUsuario)
+                    UsuarioGlobal.correo = it.optString("email", UsuarioGlobal.correo) // Asumiendo que el backend devuelve 'email'
+                    UsuarioGlobal.fotoPerfil = it.optString("Foto", UsuarioGlobal.fotoPerfil)
+                }
+
+                startActivity(Intent(this, Dashboard::class.java))
                 finish()
             },
-            { error ->
-                Toast.makeText(this, "Error: ${error.message}", Toast.LENGTH_LONG).show()
-            })
-
-
-        requestQueue.add(request)
+            Response.ErrorListener { error ->
+                val errorMessage = try {
+                    val responseBody = String(error.networkResponse.data, Charsets.UTF_8)
+                    val jsonError = JSONObject(responseBody)
+                    jsonError.optString("message", error.message ?: "Error desconocido") // Tu backend devuelve "error" en caso de 500 o 404
+                } catch (e: Exception) {
+                    error.message ?: "Error de red o servidor"
+                }
+                Toast.makeText(this, "Error al actualizar usuario: $errorMessage", Toast.LENGTH_LONG).show()
+                btnUpdateUser.isEnabled = true
+            }
+        ) {
+            @Throws(com.android.volley.AuthFailureError::class)
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                val token = UsuarioGlobal.token
+                if (!token.isNullOrEmpty()) {
+                    headers["Authorization"] = "Bearer $token"
+                }
+                return headers
+            }
+        }
+        requestQueue.add(jsonObjectRequestWithAuth)
     }
 }

@@ -24,7 +24,7 @@ class FiltrarGasto : AppCompatActivity() {
 
     private var usuarioID: String = ""
 
-    private var pagina: Int = 1 // Página actual
+    private var pagina: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,7 +95,6 @@ class FiltrarGasto : AppCompatActivity() {
         )
         return nombresMeses.indexOf(nombreMes) + 1
     }
-
 
     private fun obtenerGasto(usuarioID: String, mes: Int, anio: Int, pagina: Int) {
         val baseUrl = getString(R.string.base_url)

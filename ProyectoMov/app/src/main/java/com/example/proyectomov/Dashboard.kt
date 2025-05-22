@@ -84,11 +84,13 @@ class Dashboard : AppCompatActivity() {
         findViewById<Button>(R.id.btn_register_expense).setOnClickListener {
             val intent = Intent(this, RegisterGasto::class.java)
             startActivity(intent)
+            finish()
         }
 
         findViewById<Button>(R.id.btn_register_income).setOnClickListener {
             val intent = Intent(this, RegisterIngreso::class.java)
             startActivity(intent)
+            finish()
         }
 
 
@@ -121,11 +123,13 @@ class Dashboard : AppCompatActivity() {
         findViewById<Button>(R.id.btn_editar_usuario).setOnClickListener {
             val intent = Intent(this, UpdateUser::class.java)
             startActivity(intent)
+            finish()
         }
 
         findViewById<Button>(R.id.btn_logOut).setOnClickListener {
             val intent = Intent(this, LogIn::class.java)
             startActivity(intent)
+            finish()
         }
 
 
@@ -158,17 +162,20 @@ class Dashboard : AppCompatActivity() {
             val intent = Intent(this, FiltrarRegistros::class.java)
             intent.putExtra("tipo_filtro", "ingreso")  // <-- Envía "ingreso"
             startActivity(intent)
+            finish()
         }
 
         findViewById<Button>(R.id.btn_ver_gastos).setOnClickListener {
             val intent = Intent(this, FiltrarGasto::class.java)
             intent.putExtra("tipo_filtro", "gasto")  // <-- Envía "gasto"
             startActivity(intent)
+            finish()
         }
 
         findViewById<Button>(R.id.btn_reporte).setOnClickListener {
             val intent = Intent(this, Report::class.java)
             startActivity(intent)
+            finish()
         }
 
 
