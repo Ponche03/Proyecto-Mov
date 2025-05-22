@@ -54,6 +54,7 @@
         <activity android:name=".FiltrarTransacciones" />
         <activity android:name=".DetalleIngreso"/>
         <activity android:name=".DetalleGasto"/>
+        <activity android:name=".Report"/>
 
 
         <meta-data
