@@ -101,7 +101,7 @@
 
     <!-- Pantalla de Reportes-->
     <string name="Reportes_fecha">Fecha:</string>
-    <string name="Reportes_filtrar">filtrar por:</string>
+    <string name="Reportes_filtrar">Filtrar por:</string>
     <string name="Reportes_filtrar1">Tipo de gasto</string>
     <string name="Reportes_comida">Comida</string>
     <string name="Reportes_fijos">Gastos fijos</string>

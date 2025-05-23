@@ -121,8 +121,6 @@ class Report : AppCompatActivity() {
 
             tipoSeleccionado = tipo
 
-
-
             // Llamar a la función para obtener el reporte
             obtenerReporteIngresos(usuarioID, mesSeleccionado, anioSeleccionado, tipoSeleccionado)
         }, anio, mes, 1)
