@@ -8,6 +8,22 @@
     android:background="@color/dark_blue"
     tools:context=".Dashboard">
 
+    <TextView
+        android:id="@+id/offline_indicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/holo_red_dark"
+        android:elevation="5dp"
+        android:fontFamily="@font/poppins"
+        android:gravity="center"
+        android:padding="2dp"
+        android:visibility="gone"
+        android:text="MODO OFFLINE"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/app_icon"
         android:layout_width="24dp"
