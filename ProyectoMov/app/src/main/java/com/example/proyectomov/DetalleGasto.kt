@@ -10,14 +10,34 @@ import android.text.style.ClickableSpan
 import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.View
+import android.widget.Button // Import Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import java.text.SimpleDateFormat // For date formatting
+import java.util.Locale // For date formatting
 
 class DetalleGasto : AppCompatActivity() {
+
+    private var transactionId: String? = null
+    private var rawFecha: String? = null // To store the original ISO date
+
+    // Function to format ISO date to a more readable format
+    private fun formatarFechaBonita(fechaISO: String?): String {
+        if (fechaISO.isNullOrEmpty()) return "Fecha no disponible"
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
+            val date = inputFormat.parse(fechaISO)
+            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
+            date?.let { outputFormat.format(it) } ?: fechaISO
+        } catch (e: Exception) {
+            Log.e("DateParseError", "Error formateando fecha: $fechaISO", e)
+            fechaISO.substringBefore("T") // Fallback
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,26 +49,33 @@ class DetalleGasto : AppCompatActivity() {
         val fechaTextView: TextView = findViewById(R.id.amount6)
         val descripcionTextView: TextView = findViewById(R.id.amount8)
         val tipoTextView: TextView = findViewById(R.id.amount10)
-
         val etiquetaArchivoTextView: TextView = findViewById(R.id.amount11)
         val archivoLinkTextView: TextView = findViewById(R.id.amount12)
-
         val backArrow: ImageView = findViewById(R.id.imageView)
+        val btnEditarGasto: Button = findViewById(R.id.btnEditarGasto)
+
+
         backArrow.setOnClickListener {
             finish()
         }
 
-
         intent.extras?.let { bundle ->
-            tituloTextView.text = bundle.getString("nombre", "Detalle del Gasto")
-            montoTextView.text = String.format("$%s", bundle.getString("monto", "0.00"))
-            fechaTextView.text = bundle.getString("fecha", "Fecha no disponible")
-            descripcionTextView.text = bundle.getString("descripcion", "Sin descripción")
-            tipoTextView.text = bundle.getString("tipo", "Tipo no especificado")
-
+            transactionId = bundle.getString("EXTRA_TRANSACTION_ID")
+            val nombre = bundle.getString("nombre", "Detalle del Gasto")
+            val monto = bundle.getString("monto", "0.00")
+            rawFecha = bundle.getString("fecha") // Expecting ISO date
+            val descripcion = bundle.getString("descripcion", "Sin descripción")
+            val tipo = bundle.getString("tipo", "Tipo no especificado")
             val urlArchivo = bundle.getString("archivo")
 
+            tituloTextView.text = nombre
+            montoTextView.text = String.format("$%s", monto)
+            fechaTextView.text = formatarFechaBonita(rawFecha) // Format for display
+            descripcionTextView.text = descripcion
+            tipoTextView.text = tipo
+
             if (!urlArchivo.isNullOrEmpty()) {
+                // ... (existing file link logic remains the same)
                 etiquetaArchivoTextView.visibility = View.VISIBLE
                 archivoLinkTextView.visibility = View.VISIBLE
 
@@ -70,24 +97,39 @@ class DetalleGasto : AppCompatActivity() {
 
                     override fun updateDrawState(ds: android.text.TextPaint) {
                         super.updateDrawState(ds)
-                        ds.color = ContextCompat.getColor(this@DetalleGasto, R.color.white) // Fuerza el color blanco
-                        ds.isUnderlineText = true // Subrayado (opcional)
+                        ds.color = ContextCompat.getColor(this@DetalleGasto, R.color.white)
+                        ds.isUnderlineText = true
                     }
                 }
-
                 spannableString.setSpan(clickableSpan, 0, textoLink.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-
                 archivoLinkTextView.text = spannableString
                 archivoLinkTextView.movementMethod = LinkMovementMethod.getInstance()
-
             } else {
                 etiquetaArchivoTextView.visibility = View.GONE
                 archivoLinkTextView.text = "Sin archivo adjunto"
                 archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.light_grey))
                 archivoLinkTextView.isClickable = false
             }
+
+            btnEditarGasto.setOnClickListener {
+                if (transactionId != null) {
+                    val intent = Intent(this, UpdateGastoActivity::class.java).apply {
+                        putExtra("EXTRA_TRANSACTION_ID", transactionId)
+                        putExtra("nombre", nombre)
+                        putExtra("monto", monto)
+                        putExtra("fecha", rawFecha)
+                        putExtra("tipo", tipo)
+                        putExtra("descripcion", descripcion)
+                        putExtra("archivo", urlArchivo)
+                    }
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, "ID de transacción no disponible.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
         } ?: run {
-            // Valores por defecto si no hay extras en el intent
+            // ... (existing fallback logic)
             tituloTextView.text = "Detalle del Gasto"
             montoTextView.text = "$0.00"
             fechaTextView.text = "Fecha no disponible"
@@ -96,6 +138,7 @@ class DetalleGasto : AppCompatActivity() {
             etiquetaArchivoTextView.visibility = View.GONE
             archivoLinkTextView.text = "Sin archivo adjunto"
             archivoLinkTextView.isClickable = false
+            btnEditarGasto.visibility = View.GONE
         }
     }
 }

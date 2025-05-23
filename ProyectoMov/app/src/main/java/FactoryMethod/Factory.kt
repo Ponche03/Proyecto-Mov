@@ -5,9 +5,10 @@ interface TransaccionFactory {
         idUser: String,
         nombre: String,
         descripcion: String?,
-        fecha: String,
+        fecha: String, // Should be ISO date string
         monto: Double,
         tipo: String?,
-        archivo: String?
+        archivo: String?,
+        transactionId: String? = null // Make nullable and last parameter with default
     ): Transaccion
 }

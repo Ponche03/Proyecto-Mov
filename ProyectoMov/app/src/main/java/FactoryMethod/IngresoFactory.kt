@@ -8,8 +8,18 @@ class IngresoFactory : TransaccionFactory {
         fecha: String,
         monto: Double,
         tipo: String?,
-        archivo: String?
+        archivo: String?,
+        transactionId: String?
     ): Transaccion {
-        return Ingreso(idUser, nombre, descripcion, fecha, monto, tipo, archivo)
+        return Ingreso(
+            transactionId = transactionId,
+            idUser = idUser,
+            nombre = nombre,
+            descripcion = descripcion,
+            fecha = fecha,
+            monto = monto,
+            tipo = tipo,
+            archivo = archivo
+        )
     }
 }

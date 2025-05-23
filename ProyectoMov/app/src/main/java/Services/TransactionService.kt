@@ -3,6 +3,7 @@ package Services
 import UsuarioGlobal
 import android.content.Context
 import com.android.volley.AuthFailureError
+import com.android.volley.Request // Import Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
@@ -22,8 +23,8 @@ class TransactionService(private val context: Context) {
         onError: (errorMessage: String) -> Unit
     ) {
         val jsonBody = JSONObject().apply {
-            put("Id_user", transaccion.idUser)
-            put("Fecha", transaccion.fecha)
+            put("Id_user", transaccion.idUser) // Ensure this is the correct user ID
+            put("Fecha", transaccion.fecha) // Assumes transaccion.fecha is ISO format
             put("Monto", transaccion.monto)
             put("Nombre", transaccion.nombre)
             put("Tipo", transaccion.tipo)
@@ -63,6 +64,65 @@ class TransactionService(private val context: Context) {
         }
         requestQueue.add(jsonObjectRequestWithAuth)
     }
+
+    fun actualizarTransaccion(
+        transactionId: String,
+        transaccion: Transaccion,
+        endpoint: String, // "gastos" or "ingresos"
+        onSuccess: (response: JSONObject) -> Unit,
+        onError: (errorMessage: String) -> Unit
+    ) {
+        val jsonBody = JSONObject().apply {
+
+            put("Id_user", transaccion.idUser)
+            put("Nombre", transaccion.nombre)
+            put("Monto", transaccion.monto)
+            put("Descripcion", transaccion.descripcion ?: "")
+            put("Tipo", transaccion.tipo)
+            if (transaccion.archivo != null && transaccion.archivo!!.isNotEmpty()) {
+                put("Archivo", transaccion.archivo)
+            }
+
+        }
+
+        val apiUrl = "$baseUrl/$endpoint/$transactionId"
+
+        val jsonObjectRequestWithAuth = object : JsonObjectRequest(
+            Request.Method.PUT, // Use PUT for updates
+            apiUrl,
+            jsonBody,
+            Response.Listener { response ->
+                onSuccess(response)
+            },
+            Response.ErrorListener { error ->
+                val errorMessage = try {
+                    val networkResponse = error.networkResponse
+                    if (networkResponse?.data != null) {
+                        val responseBody = String(networkResponse.data, Charsets.UTF_8)
+                        val jsonError = JSONObject(responseBody)
+                        jsonError.optString("message", error.message ?: "Error desconocido.")
+                    } else {
+                        error.message ?: "Error de red o servidor."
+                    }
+                } catch (e: Exception) {
+                    error.message ?: "Error de red o servidor."
+                }
+                onError(errorMessage)
+            }
+        ) {
+            @Throws(AuthFailureError::class)
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                val token = UsuarioGlobal.token
+                if (!token.isNullOrEmpty()) {
+                    headers["Authorization"] = "Bearer $token"
+                }
+                return headers
+            }
+        }
+        requestQueue.add(jsonObjectRequestWithAuth)
+    }
+
 
     fun obtenerTransacciones(
         endpoint: String,

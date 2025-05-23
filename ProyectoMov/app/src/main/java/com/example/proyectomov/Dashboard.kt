@@ -267,10 +267,11 @@ class Dashboard : AppCompatActivity() {
             val item = jsonArray.getJSONObject(i)
             try {
                 val gasto = gastoFactory.crearTransaccion(
+                    transactionId = item.getString("_id"),
                     idUser = item.optString("Id_user", UsuarioGlobal.id ?: ""),
                     nombre = item.getString("Nombre"),
                     descripcion = item.optString("Descripcion"),
-                    fecha = formatarFechaBonita(item.getString("FechaLocal")), //
+                    fecha = item.getString("FechaLocal"),
                     monto = item.getDouble("Monto"),
                     tipo = item.getString("Tipo"),
                     archivo = item.optString("Archivo")
@@ -290,10 +291,11 @@ class Dashboard : AppCompatActivity() {
             val item = jsonArray.getJSONObject(i)
             try {
                 val ingreso = ingresoFactory.crearTransaccion(
+                    transactionId = item.getString("_id"),
                     idUser = item.optString("Id_user", UsuarioGlobal.id ?: ""),
                     nombre = item.getString("Nombre"),
                     descripcion = item.optString("Descripcion"),
-                    fecha = formatarFechaBonita(item.getString("FechaLocal")), //
+                    fecha = item.getString("FechaLocal"),
                     monto = item.getDouble("Monto"),
                     tipo = item.getString("Tipo"),
                     archivo = item.optString("Archivo")
@@ -327,22 +329,24 @@ class Dashboard : AppCompatActivity() {
         return if (monthIndex in meses.indices) meses[monthIndex] else ""
     }
 
+    // Modify onGastoClicked to pass the transactionId and raw fecha
     private fun onGastoClicked(gasto: Gasto) { //
         val intent = Intent(this, DetalleGasto::class.java).apply {
-            putExtra("gastoId", gasto.idUser)
+            putExtra("EXTRA_TRANSACTION_ID", gasto.transactionId)
             putExtra("nombre", gasto.nombre)
             putExtra("monto", gasto.monto.toString())
-            putExtra("fecha", gasto.fecha)
+            putExtra("fecha", gasto.fecha) 
             putExtra("tipo", gasto.tipo)
             putExtra("descripcion", gasto.descripcion)
             putExtra("archivo", gasto.archivo)
+
         }
         startActivity(intent)
     }
 
     private fun onIngresoClicked(ingreso: Ingreso) { //
         val intent = Intent(this, DetalleIngreso::class.java).apply {
-            putExtra("ingresoId", ingreso.idUser)
+            putExtra("EXTRA_TRANSACTION_ID", ingreso.transactionId)
             putExtra("nombre", ingreso.nombre)
             putExtra("monto", ingreso.monto.toString())
             putExtra("fecha", ingreso.fecha)

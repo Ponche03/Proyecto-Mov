@@ -1,12 +1,14 @@
 package com.example.proyectomov
 
 import FactoryMethod.Gasto
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
 import java.util.Locale
 
 
@@ -14,6 +16,19 @@ class GastoAdapter(
     var gastos: MutableList<Gasto>,
     private val onItemClicked: (Gasto) -> Unit
 ) : RecyclerView.Adapter<GastoAdapter.GastoViewHolder>() {
+
+    private fun formatarFechaBonita(fechaISO: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
+            val date = inputFormat.parse(fechaISO)
+            // Using a simpler format for list display, adjust as needed
+            val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale("es", "ES"))
+            date?.let { outputFormat.format(it) } ?: fechaISO.substringBefore("T")
+        } catch (e: Exception) {
+            Log.e("DateParseErrorAdapter", "Error formateando fecha: $fechaISO", e)
+            fechaISO.substringBefore("T") // Fallback
+        }
+    }
 
     class GastoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val fecha: TextView = itemView.findViewById(R.id.fecha)
@@ -30,7 +45,7 @@ class GastoAdapter(
 
     override fun onBindViewHolder(holder: GastoViewHolder, position: Int) {
         val gasto = gastos[position]
-        holder.fecha.text = gasto.fecha
+        holder.fecha.text = formatarFechaBonita(gasto.fecha) // Format date for display
         holder.titulo.text = gasto.nombre
         holder.monto.text = String.format(Locale.getDefault(), "$%.2f", gasto.monto)
 

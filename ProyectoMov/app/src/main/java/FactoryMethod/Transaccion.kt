@@ -1,6 +1,7 @@
 package FactoryMethod
 
 interface Transaccion {
+    val transactionId: String?
     val idUser: String
     val nombre: String
     val descripcion: String?

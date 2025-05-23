@@ -57,6 +57,8 @@
         <activity android:name=".DetalleGasto"/>
         <activity android:name=".Report"/>
 
+        <activity android:name=".UpdateGastoActivity" />
+        <activity android:name=".UpdateIngresoActivity" />
 
         <meta-data
             android:name="preloaded_fonts"

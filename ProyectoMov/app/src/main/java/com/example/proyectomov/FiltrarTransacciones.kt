@@ -200,20 +200,22 @@ class FiltrarTransacciones : AppCompatActivity() {
                         val item = transaccionesJsonArray.getJSONObject(i)
                         val transaccion: Transaccion = if (tipoFiltroActual == "gastos") {
                             gastoFactory.crearTransaccion(
+                                transactionId = item.getString("_id"),
                                 idUser = item.optString("Id_user", usuarioID),
                                 nombre = item.getString("Nombre"),
                                 descripcion = item.optString("Descripcion"),
-                                fecha = formatarFechaBonita(item.getString("FechaLocal")),
+                                fecha = item.getString("FechaLocal"),
                                 monto = item.getDouble("Monto"),
                                 tipo = item.getString("Tipo"),
                                 archivo = item.optString("Archivo")
                             )
                         } else {
                             ingresoFactory.crearTransaccion(
+                                transactionId = item.getString("_id"),
                                 idUser = item.optString("Id_user", usuarioID),
                                 nombre = item.getString("Nombre"),
                                 descripcion = item.optString("Descripcion"),
-                                fecha = formatarFechaBonita(item.getString("FechaLocal")),
+                                fecha = item.getString("FechaLocal"),
                                 monto = item.getDouble("Monto"),
                                 tipo = item.getString("Tipo"),
                                 archivo = item.optString("Archivo")
@@ -267,6 +269,7 @@ class FiltrarTransacciones : AppCompatActivity() {
         }
 
         intent.apply {
+            putExtra("EXTRA_TRANSACTION_ID", transaccion.transactionId)
             putExtra("nombre", transaccion.nombre)
             putExtra("monto", transaccion.monto.toString())
             putExtra("fecha", transaccion.fecha)

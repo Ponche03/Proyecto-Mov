@@ -1,6 +1,7 @@
 package FactoryMethod
 
 data class Ingreso(
+    override val transactionId: String? = null,
     override val idUser: String,
     override val nombre: String,
     override val descripcion: String?,
