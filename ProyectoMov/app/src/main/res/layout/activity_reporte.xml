@@ -31,6 +31,35 @@
         <!-- Now below email -->
 
 
+        <LinearLayout
+            android:id="@+id/layoutTotalesPorTipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:padding="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/amount15" />
+
+        <TextView
+            android:id="@+id/amount15"
+            android:layout_width="364dp"
+            android:layout_height="37dp"
+            android:layout_marginTop="292dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/Reportes_total"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.489"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/textViewFecha"
             android:layout_width="369dp"
@@ -38,23 +67,6 @@
             android:layout_marginTop="124dp"
             android:fontFamily="@font/poppins_light"
             android:text="Seleccionar fecha:"
-            android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.619"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/amount3"
-            android:layout_width="369dp"
-            android:layout_height="41dp"
-            android:layout_marginTop="84dp"
-            android:fontFamily="@font/poppins_light"
-            android:text=""
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/white"
