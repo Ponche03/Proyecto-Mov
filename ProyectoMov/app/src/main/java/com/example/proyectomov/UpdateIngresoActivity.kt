@@ -1,9 +1,8 @@
 package com.example.proyectomov
 
-import FactoryMethod.IngresoFactory
-import Services.FirebaseStorageService
-import Services.TransactionService
-import UsuarioGlobal
+import Services.FirebaseStorageService //
+// import Services.TransactionService // No se usa directamente
+import UsuarioGlobal //
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -22,6 +21,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
+import internalStorage.IngresoEntity //
+import internalStorage.NetworkUtils //
+import internalStorage.TransactionRepository //
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -44,57 +48,97 @@ class UpdateIngresoActivity : AppCompatActivity() {
     private var currentPhotoPath: String? = null
     private var existingFileUrl: String? = null
     private var transactionId: String? = null
+    private var localIdIngreso: Long = 0L
     private var originalFechaISO: String? = null
 
     private val PICK_IMAGE_REQUEST = 1
     private val TAKE_PHOTO_REQUEST = 2
     private val PICK_FILE_REQUEST = 3
 
-    private val ingresoFactory = IngresoFactory()
-    private val transactionService by lazy { TransactionService(this) }
-    private val firebaseStorageService = FirebaseStorageService()
+    private val firebaseStorageService = FirebaseStorageService() //
+    private val transactionRepository: TransactionRepository by lazy { //
+        TransactionRepository(applicationContext)
+    }
+    private var currentIngresoEntity: IngresoEntity? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_update_ingreso)
+        setContentView(R.layout.activity_update_ingreso) //
 
         transactionId = intent.getStringExtra("EXTRA_TRANSACTION_ID")
-        if (transactionId == null) {
-            Toast.makeText(this, "Error: ID de transacción no encontrado.", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
+        localIdIngreso = intent.getLongExtra("EXTRA_LOCAL_ID", 0L)
 
-        nombreIngresoEditText = findViewById(R.id.nombre_ingreso_update)
-        montoIngresoEditText = findViewById(R.id.monto_ingreso_update)
-        descripcionIngresoEditText = findViewById(R.id.descripcion_ingreso_update)
-        categoriaSpinner = findViewById(R.id.spinner_categoria_ingreso_update)
-        adjuntarArchivoText = findViewById(R.id.adjuntar_archivo_text_update_ingreso)
-        currentFileText = findViewById(R.id.current_file_text_ingreso)
-        btnActualizar = findViewById(R.id.btn_actualizar_ingreso)
-        botonRegresar = findViewById(R.id.imageViewBackUpdateIngreso)
+
+        nombreIngresoEditText = findViewById(R.id.nombre_ingreso_update) //
+        montoIngresoEditText = findViewById(R.id.monto_ingreso_update) //
+        descripcionIngresoEditText = findViewById(R.id.descripcion_ingreso_update) //
+        categoriaSpinner = findViewById(R.id.spinner_categoria_ingreso_update) //
+        adjuntarArchivoText = findViewById(R.id.adjuntar_archivo_text_update_ingreso) //
+        currentFileText = findViewById(R.id.current_file_text_ingreso) //
+        btnActualizar = findViewById(R.id.btn_actualizar_ingreso) //
+        botonRegresar = findViewById(R.id.imageViewBackUpdateIngreso) //
 
         val adapter = ArrayAdapter.createFromResource(
-            this, R.array.ingreso_categoria_array, android.R.layout.simple_spinner_item
+            this, R.array.ingreso_categoria_array, android.R.layout.simple_spinner_item //
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         categoriaSpinner.adapter = adapter
 
-        loadExistingData()
+        lifecycleScope.launch{
+            if (transactionId != null) {
+                currentIngresoEntity = transactionRepository.ingresoDao.getIngresoByServerId(transactionId!!) //
+            } else if (localIdIngreso != 0L) {
+                currentIngresoEntity = transactionRepository.ingresoDao.getIngresoByLocalId(localIdIngreso) //
+            }
+
+            if (currentIngresoEntity != null) {
+                populateUIFromEntity(currentIngresoEntity!!)
+            } else {
+                Log.w("UpdateIngreso", "IngresoEntity no encontrada en DB, usando datos del Intent como fallback.")
+                populateUIFromIntentFallback()
+                if (transactionId == null && localIdIngreso == 0L) {
+                    Toast.makeText(this@UpdateIngresoActivity, "Error: Ingreso no identificable para actualizar.", Toast.LENGTH_LONG).show()
+                    btnActualizar.isEnabled = false
+                }
+            }
+        }
 
         adjuntarArchivoText.setOnClickListener { mostrarOpcionesDeArchivo() }
         btnActualizar.setOnClickListener { handleIngresoUpdate() }
         botonRegresar.setOnClickListener { finish() }
     }
 
-    private fun loadExistingData() {
+    private fun populateUIFromEntity(ingreso: IngresoEntity) { //
+        nombreIngresoEditText.setText(ingreso.nombre)
+        montoIngresoEditText.setText(ingreso.monto.toString())
+        descripcionIngresoEditText.setText(ingreso.descripcion)
+        originalFechaISO = ingreso.fecha // Keep original date
+
+        val categorias = resources.getStringArray(R.array.ingreso_categoria_array) //
+        val tipoPosition = categorias.indexOf(ingreso.tipo)
+        if (tipoPosition >= 0) {
+            categoriaSpinner.setSelection(tipoPosition)
+        }
+
+        existingFileUrl = ingreso.archivo
+        if (!existingFileUrl.isNullOrEmpty()) {
+            currentFileText.text = "Archivo actual: ${existingFileUrl?.substringAfterLast('/')}"
+            currentFileText.visibility = View.VISIBLE //
+        } else {
+            currentFileText.text = "Archivo actual: ninguno"
+            currentFileText.visibility = View.VISIBLE //
+        }
+    }
+
+    private fun populateUIFromIntentFallback() {
         nombreIngresoEditText.setText(intent.getStringExtra("nombre"))
         montoIngresoEditText.setText(intent.getStringExtra("monto"))
         descripcionIngresoEditText.setText(intent.getStringExtra("descripcion"))
         originalFechaISO = intent.getStringExtra("fecha")
 
         val tipoIngreso = intent.getStringExtra("tipo")
-        val categorias = resources.getStringArray(R.array.ingreso_categoria_array)
+        val categorias = resources.getStringArray(R.array.ingreso_categoria_array) //
         val tipoPosition = categorias.indexOf(tipoIngreso)
         if (tipoPosition >= 0) {
             categoriaSpinner.setSelection(tipoPosition)
@@ -103,10 +147,10 @@ class UpdateIngresoActivity : AppCompatActivity() {
         existingFileUrl = intent.getStringExtra("archivo")
         if (!existingFileUrl.isNullOrEmpty()) {
             currentFileText.text = "Archivo actual: ${existingFileUrl?.substringAfterLast('/')}"
-            currentFileText.visibility = View.VISIBLE
+            currentFileText.visibility = View.VISIBLE //
         } else {
             currentFileText.text = "Archivo actual: ninguno"
-            currentFileText.visibility = View.VISIBLE
+            currentFileText.visibility = View.VISIBLE //
         }
     }
 
@@ -121,82 +165,114 @@ class UpdateIngresoActivity : AppCompatActivity() {
             Toast.makeText(this, "Nombre y monto (mayor a 0) son requeridos.", Toast.LENGTH_SHORT).show()
             return
         }
+        if (originalFechaISO == null){
+            Toast.makeText(this, "Error: Fecha original del ingreso no disponible.", Toast.LENGTH_LONG).show()
+            return
+        }
+
 
         btnActualizar.isEnabled = false
         Toast.makeText(this, "Actualizando ingreso...", Toast.LENGTH_SHORT).show()
 
         if (selectedFileUri != null) {
-            firebaseStorageService.uploadFile(
-                fileUri = selectedFileUri!!,
-                storagePath = "ingresos_archivos",
-                onSuccess = { newFileUrl ->
-                    actualizarIngresoEnServidor(nombre, monto, descripcion, categoria, newFileUrl)
-                },
-                onFailure = { errorMsg ->
-                    Toast.makeText(this, "Error al subir nuevo archivo: $errorMsg", Toast.LENGTH_LONG).show()
-                    btnActualizar.isEnabled = true
-                }
-            )
+            if (NetworkUtils.isNetworkAvailable(this)) { //
+                firebaseStorageService.uploadFile( //
+                    fileUri = selectedFileUri!!,
+                    storagePath = "ingresos_archivos",
+                    onSuccess = { newFileUrl ->
+                        proceedWithUpdateInRepository(nombre, monto, descripcion, categoria, newFileUrl)
+                    },
+                    onFailure = { errorMsg ->
+                        Toast.makeText(this, "Error al subir nuevo archivo: $errorMsg. Guardando con referencia local.", Toast.LENGTH_LONG).show()
+                        proceedWithUpdateInRepository(nombre, monto, descripcion, categoria, selectedFileUri.toString())
+                    }
+                )
+            } else {
+                Toast.makeText(this, "Modo offline. Nuevo archivo se subirá más tarde.", Toast.LENGTH_SHORT).show()
+                proceedWithUpdateInRepository(nombre, monto, descripcion, categoria, selectedFileUri.toString())
+            }
         } else {
-            actualizarIngresoEnServidor(nombre, monto, descripcion, categoria, existingFileUrl)
+            proceedWithUpdateInRepository(nombre, monto, descripcion, categoria, existingFileUrl)
         }
     }
 
-    private fun actualizarIngresoEnServidor(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUrl: String?) {
-        val userId = UsuarioGlobal.id ?: ""
+    private fun proceedWithUpdateInRepository(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUriOrUrl: String?) {
+        val userId = UsuarioGlobal.id ?: "" //
         if (userId.isEmpty()) {
             Toast.makeText(this, "Error: Usuario no identificado.", Toast.LENGTH_LONG).show()
             btnActualizar.isEnabled = true
             return
         }
-        if (originalFechaISO == null) {
-            Toast.makeText(this, "Error: Fecha original no disponible.", Toast.LENGTH_LONG).show()
+        if (this.originalFechaISO == null) {
+            Toast.makeText(this, "Error crítico: Fecha original no disponible para la actualización.", Toast.LENGTH_LONG).show()
             btnActualizar.isEnabled = true
             return
         }
 
+        val entidadParaActualizar: IngresoEntity //
 
-        val ingresoActualizado = ingresoFactory.crearTransaccion(
-            transactionId = transactionId!!,
-            idUser = userId,
-            nombre = nombre,
-            descripcion = descripcion,
-            fecha = originalFechaISO!!, // Send original ISO date
-            monto = monto,
-            tipo = categoria,
-            archivo = archivoUrl
-        )
+        if (currentIngresoEntity != null) {
+            entidadParaActualizar = currentIngresoEntity!!.copy(
+                nombre = nombre,
+                monto = monto,
+                descripcion = descripcion,
+                tipo = categoria,
+                archivo = archivoUriOrUrl
+            )
+        } else {
+            if ((transactionId == null && localIdIngreso == 0L) || originalFechaISO == null) {
+                Toast.makeText(this, "No se puede actualizar el ingreso: faltan identificadores o fecha original.", Toast.LENGTH_LONG).show()
+                btnActualizar.isEnabled = true
+                return
+            }
+            entidadParaActualizar = IngresoEntity( //
+                localId = localIdIngreso,
+                transactionId = transactionId,
+                idUser = userId,
+                nombre = nombre,
+                descripcion = descripcion,
+                fecha = originalFechaISO!!,
+                monto = monto,
+                tipo = categoria,
+                archivo = archivoUriOrUrl,
+                isSynced = false,
+                pendingAction = if (transactionId == null && currentIngresoEntity?.pendingAction != "CREATE") "CREATE" else "UPDATE"
+            )
+        }
 
-        transactionService.actualizarTransaccion(transactionId!!, ingresoActualizado, "ingresos",
-            { response ->
-                Toast.makeText(this, "Ingreso actualizado: ${response.optString("message", "")}", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, Dashboard::class.java)
+        lifecycleScope.launch {
+            try {
+                transactionRepository.actualizarIngreso(entidadParaActualizar) //
+                Toast.makeText(this@UpdateIngresoActivity, "Ingreso actualizado.", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@UpdateIngresoActivity, Dashboard::class.java) //
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
                 finish()
-            },
-            { errorMsg ->
-                Toast.makeText(this, "Error al actualizar ingreso: $errorMsg", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@UpdateIngresoActivity, "Error al actualizar ingreso: ${e.message}", Toast.LENGTH_LONG).show()
                 btnActualizar.isEnabled = true
             }
-        )
+        }
     }
 
     private fun mostrarOpcionesDeArchivo() {
-        val opciones = arrayOf("Seleccionar Imagen de Galería", "Tomar Foto", "Seleccionar Archivo", "Quitar Archivo Actual")
+        val opciones = mutableListOf("Seleccionar Imagen de Galería", "Tomar Foto", "Seleccionar Archivo")
+        if (existingFileUrl != null || selectedFileUri != null) {
+            opciones.add("Quitar Archivo Actual")
+        }
         AlertDialog.Builder(this)
             .setTitle("Adjuntar archivo")
-            .setItems(opciones) { _, which ->
-                when (which) {
-                    0 -> abrirGaleria()
-                    1 -> tomarFoto()
-                    2 -> abrirSelectorDeArchivos()
-                    3 -> {
+            .setItems(opciones.toTypedArray()) { _, which ->
+                when (opciones[which]) {
+                    "Seleccionar Imagen de Galería" -> abrirGaleria()
+                    "Tomar Foto" -> tomarFoto()
+                    "Seleccionar Archivo" -> abrirSelectorDeArchivos()
+                    "Quitar Archivo Actual" -> {
                         selectedFileUri = null
                         existingFileUrl = null
-                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo)
-                        currentFileText.text = "Archivo actual: ninguno (se quitará)"
-                        Toast.makeText(this, "Archivo actual se quitará al actualizar.", Toast.LENGTH_SHORT).show()
+                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
+                        currentFileText.text = "Archivo actual: ninguno (se quitará al actualizar)"
+                        Toast.makeText(this, "El archivo se quitará al actualizar.", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -218,8 +294,8 @@ class UpdateIngresoActivity : AppCompatActivity() {
                     null
                 }
                 photoFile?.also {
-                    val photoURI: Uri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", it)
-                    selectedFileUri = photoURI // Set for TAKE_PHOTO_REQUEST
+                    val photoURI: Uri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.provider", it) //
+                    selectedFileUri = photoURI
                     currentPhotoPath = it.absolutePath
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
                     startActivityForResult(takePictureIntent, TAKE_PHOTO_REQUEST)
@@ -244,7 +320,7 @@ class UpdateIngresoActivity : AppCompatActivity() {
     private fun crearArchivoDeImagen(): File {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir).apply {
+        return File.createTempFile("JPEG_${timeStamp}_${UUID.randomUUID()}", ".jpg", storageDir).apply {
             currentPhotoPath = absolutePath
         }
     }
@@ -260,8 +336,9 @@ class UpdateIngresoActivity : AppCompatActivity() {
             uri?.let {
                 selectedFileUri = it
                 val fileName = it.lastPathSegment ?: "archivo seleccionado"
-                adjuntarArchivoText.text = "Nuevo archivo: $fileName"
-                currentFileText.text = "Archivo actual: (se reemplazará con el nuevo)"
+                adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
+                currentFileText.text = "Nuevo archivo: $fileName (reemplazará al actual si existe)"
+                currentFileText.visibility = View.VISIBLE //
             }
         }
     }

@@ -20,8 +20,8 @@ import org.json.JSONObject //
 
 class TransactionRepository(private val context: Context) {
     private val transactionService = TransactionService(context) //
-    private val gastoDao = AppDatabase.getDatabase(context).gastoDao()
-    private val ingresoDao = AppDatabase.getDatabase(context).ingresoDao()
+    val gastoDao = AppDatabase.getDatabase(context).gastoDao()
+    val ingresoDao = AppDatabase.getDatabase(context).ingresoDao()
     private val repositoryScope = CoroutineScope(Dispatchers.IO) // A dedicated scope for repository operations
 
     // --- Gasto Operations ---
