@@ -67,12 +67,18 @@ class DetalleGasto : AppCompatActivity() {
                             Toast.makeText(this@DetalleGasto, "No se puede abrir el enlace.", Toast.LENGTH_SHORT).show()
                         }
                     }
+
+                    override fun updateDrawState(ds: android.text.TextPaint) {
+                        super.updateDrawState(ds)
+                        ds.color = ContextCompat.getColor(this@DetalleGasto, R.color.white) // Fuerza el color blanco
+                        ds.isUnderlineText = true // Subrayado (opcional)
+                    }
                 }
+
                 spannableString.setSpan(clickableSpan, 0, textoLink.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 archivoLinkTextView.text = spannableString
                 archivoLinkTextView.movementMethod = LinkMovementMethod.getInstance()
-                archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.bright_blue))
 
             } else {
                 etiquetaArchivoTextView.visibility = View.GONE
@@ -81,6 +87,7 @@ class DetalleGasto : AppCompatActivity() {
                 archivoLinkTextView.isClickable = false
             }
         } ?: run {
+            // Valores por defecto si no hay extras en el intent
             tituloTextView.text = "Detalle del Gasto"
             montoTextView.text = "$0.00"
             fechaTextView.text = "Fecha no disponible"

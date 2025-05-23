@@ -42,7 +42,6 @@ class DetalleIngreso : AppCompatActivity() {
             tituloTextView.text = bundle.getString("nombre", "Detalle del Ingreso")
             montoTextView.text = String.format("$%s", bundle.getString("monto", "0.00"))
             fechaTextView.text = bundle.getString("fecha", "Fecha no disponible")
-            // Usar "descripcion" como clave para la descripción
             descripcionTextView.text = bundle.getString("descripcion", "Sin descripción")
             tipoTextView.text = bundle.getString("tipo", "Tipo no especificado")
 
@@ -52,7 +51,7 @@ class DetalleIngreso : AppCompatActivity() {
                 etiquetaArchivoTextView.visibility = View.VISIBLE
                 archivoLinkTextView.visibility = View.VISIBLE
 
-                val textoLink = "Ver archivo adjunto"
+                val textoLink = "Ver archivo adjunto."
                 val spannableString = SpannableString(textoLink)
 
                 spannableString.setSpan(UnderlineSpan(), 0, textoLink.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -63,33 +62,37 @@ class DetalleIngreso : AppCompatActivity() {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlArchivo))
                             startActivity(intent)
                         } catch (e: Exception) {
-                            Log.e("DetalleIngreso", "Error al abrir URL: $urlArchivo", e)
+                            Log.e("DetalleGasto", "Error al abrir URL: $urlArchivo", e)
                             Toast.makeText(this@DetalleIngreso, "No se puede abrir el enlace.", Toast.LENGTH_SHORT).show()
                         }
                     }
 
+                    override fun updateDrawState(ds: android.text.TextPaint) {
+                        super.updateDrawState(ds)
+                        ds.color = ContextCompat.getColor(this@DetalleIngreso, R.color.white) // Fuerza el color blanco
+                        ds.isUnderlineText = true
+                    }
                 }
+
                 spannableString.setSpan(clickableSpan, 0, textoLink.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 archivoLinkTextView.text = spannableString
-                archivoLinkTextView.movementMethod = LinkMovementMethod.getInstance() // Necesario para ClickableSpans
-                archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.bright_blue)) // Color de link
-
+                archivoLinkTextView.movementMethod = LinkMovementMethod.getInstance()
+                archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
             } else {
                 etiquetaArchivoTextView.visibility = View.GONE
-                archivoLinkTextView.text = "Sin archivo adjunto"
-                archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.light_grey)) // Color de texto normal
+                archivoLinkTextView.text = "Sin archivo adjunto."
+                archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.light_grey))
                 archivoLinkTextView.isClickable = false
             }
         } ?: run {
-            // Manejar el caso en que no haya extras
             tituloTextView.text = "Detalle del Ingreso"
             montoTextView.text = "$0.00"
             fechaTextView.text = "Fecha no disponible"
             descripcionTextView.text = "Sin descripción"
             tipoTextView.text = "Tipo no especificado"
             etiquetaArchivoTextView.visibility = View.GONE
-            archivoLinkTextView.text = "Sin archivo adjunto"
+            archivoLinkTextView.text = "Sin archivo adjunto."
             archivoLinkTextView.isClickable = false
         }
     }

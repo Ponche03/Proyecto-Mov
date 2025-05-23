@@ -1,6 +1,7 @@
 package com.example.proyectomov
 
 import UsuarioGlobal
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -43,9 +44,13 @@ class RegisterIngreso : AppCompatActivity() {
 
     private var usuarioID: String = ""
     private var selectedImageUri: Uri? = null
+    private var selectedFileUri: Uri? = null
 
+
+    // Request codes
     private val PICK_IMAGE_REQUEST = 1
     private val TAKE_PHOTO_REQUEST = 2
+    private val PICK_FILE_REQUEST = 3
     private var currentPhotoPath: String? = null
 
     private val ingresoFactory = IngresoFactory()
@@ -105,9 +110,9 @@ class RegisterIngreso : AppCompatActivity() {
         Toast.makeText(this, "Registrando ingreso...", Toast.LENGTH_SHORT).show()
         btnRegistrarIngreso.isEnabled = false
 
-        if (selectedImageUri != null) {
+        if (selectedFileUri != null) {
             firebaseStorageService.uploadFile(
-                fileUri = selectedImageUri!!,
+                fileUri = selectedFileUri!!,
                 storagePath = "ingresos_archivos",
                 onSuccess = { archivoUrl ->
                     registrarIngreso(nombre, descripcion, tipo, monto, archivoUrl)
@@ -146,13 +151,14 @@ class RegisterIngreso : AppCompatActivity() {
     }
 
     private fun mostrarOpcionesDeImagen() {
-        val opciones = arrayOf("Seleccionar desde Galería", "Tomar Foto")
+        val opciones = arrayOf("Seleccionar Imagen de Galería", "Tomar Foto", "Seleccionar Archivo")
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Selecciona una opción")
+        builder.setTitle("Selecciona una opción para adjuntar")
         builder.setItems(opciones) { _, which ->
             when (which) {
                 0 -> abrirGaleria()
                 1 -> tomarFoto()
+                2 -> abrirSelectorDeArchivos()
             }
         }
         builder.show()
@@ -160,7 +166,7 @@ class RegisterIngreso : AppCompatActivity() {
 
     private fun abrirGaleria() {
         val intent = Intent(Intent.ACTION_PICK)
-        intent.type = "image/*"
+        intent.type = "image/*" // Specifically for images
         startActivityForResult(intent, PICK_IMAGE_REQUEST)
     }
 
@@ -174,7 +180,7 @@ class RegisterIngreso : AppCompatActivity() {
                     "${applicationContext.packageName}.provider",
                     it
                 )
-                selectedImageUri = photoUri
+                selectedFileUri = photoUri
                 currentPhotoPath = it.absolutePath
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
                 startActivityForResult(intent, TAKE_PHOTO_REQUEST)
@@ -184,8 +190,25 @@ class RegisterIngreso : AppCompatActivity() {
         }
     }
 
+    // New function to open file selector for any file type
+    private fun abrirSelectorDeArchivos() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "*/*" // Allows any file type
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        try {
+            startActivityForResult(
+                Intent.createChooser(intent, "Selecciona un Archivo para Subir"),
+                PICK_FILE_REQUEST
+            )
+        } catch (ex: android.content.ActivityNotFoundException) {
+            Toast.makeText(this, "Por favor, instala un administrador de archivos.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
     private fun crearArchivoDeImagen(): File? {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        // Ensure image name is unique and has a .jpg extension for photos
         val nombreImagen = "JPEG_${timeStamp}_${UUID.randomUUID()}.jpg"
         val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return try {
@@ -200,18 +223,28 @@ class RegisterIngreso : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
+        if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
                 PICK_IMAGE_REQUEST -> {
-                    selectedImageUri = data?.data
-                    selectedImageUri?.let {
-                        adjuntarArchivoTextView.text = "Archivo: ${it.lastPathSegment ?: "Imagen seleccionada"}"
+                    selectedFileUri = data?.data
+                    selectedFileUri?.let {
+                        adjuntarArchivoTextView.text = "Imagen: ${it.lastPathSegment ?: "seleccionada"}"
                     } ?: run {
                         adjuntarArchivoTextView.text = getString(R.string.adjuntar_Archivo)
                     }
                 }
                 TAKE_PHOTO_REQUEST -> {
-                    adjuntarArchivoTextView.text = "Foto capturada."
+
+                    adjuntarArchivoTextView.text = "Foto capturada: ${File(currentPhotoPath ?: "").name}"
+                }
+                PICK_FILE_REQUEST -> {
+                    selectedFileUri = data?.data
+                    selectedFileUri?.let {
+                        val fileName = it.lastPathSegment ?: "Archivo seleccionado."
+                        adjuntarArchivoTextView.text = "Archivo: $fileName"
+                    } ?: run {
+                        adjuntarArchivoTextView.text = getString(R.string.adjuntar_Archivo)
+                    }
                 }
             }
         }

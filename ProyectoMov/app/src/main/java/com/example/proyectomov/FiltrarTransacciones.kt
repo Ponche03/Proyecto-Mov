@@ -82,9 +82,6 @@ class FiltrarTransacciones : AppCompatActivity() {
         checkboxTodoElMes = findViewById(R.id.checkboxTodoElMes)
         iconCalendar = findViewById(R.id.imageView5)
 
-        // Configurar título de la pantalla (opcional, si tienes un TextView para ello)
-        // supportActionBar?.title = if (tipoFiltroActual == "gastos") "Filtrar Gastos" else "Filtrar Ingresos"
-
         recyclerViewTransacciones.layoutManager = LinearLayoutManager(this)
         gastoAdapter = GastoAdapter(mutableListOf(), this::onTransaccionItemClicked)
         ingresoAdapter = IngresoAdapter(mutableListOf(), this::onTransaccionItemClicked)
@@ -182,7 +179,7 @@ class FiltrarTransacciones : AppCompatActivity() {
             "usuarioID" to usuarioID,
             "mes" to mesSeleccionado.toString(),
             "anio" to anioSeleccionado.toString(),
-            "limite" to "10",
+            "limite" to "5",
             "pagina" to paginaActual.toString(),
             "ordenFecha" to "desc"
         )
@@ -284,7 +281,7 @@ class FiltrarTransacciones : AppCompatActivity() {
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
             val date = inputFormat.parse(fechaISO)
-            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yy", Locale("es", "ES")) // yy para año corto
+            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
             date?.let { outputFormat.format(it) } ?: fechaISO
         } catch (e: Exception) {
             Log.e("DateParseError", "Error al formatear fecha: $fechaISO", e)

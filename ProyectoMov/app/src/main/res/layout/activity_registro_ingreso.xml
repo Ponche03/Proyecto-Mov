@@ -135,17 +135,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/profilepicture_text" />
 
-        <ImageView
-            android:id="@+id/imageView5"
-            android:layout_width="20dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="53dp"
-            android:layout_marginTop="269dp"
-            app:layout_constraintBottom_toBottomOf="@+id/profilepicture_text"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/clip_de_papel" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
