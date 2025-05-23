@@ -336,7 +336,7 @@ class Dashboard : AppCompatActivity() {
                     recyclerViewTransacciones.adapter = gastoAdapter
 
                     val totalLocal = gastosDelMesDomain.sumOf { it.monto } //
-                    textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos del mes (Local): $%.2f", totalLocal)
+                    textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos recientes (Local): $%.2f", totalLocal)
                 }
             } else { // ingresos
                 transactionRepository.getIngresos(userId).collectLatest { ingresoEntities -> //
@@ -349,7 +349,7 @@ class Dashboard : AppCompatActivity() {
                     ingresoAdapter.notifyDataSetChanged()
                     recyclerViewTransacciones.adapter = ingresoAdapter
                     val totalLocal = ingresosDelMesDomain.sumOf { it.monto } //
-                    textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos del mes (Local): $%.2f", totalLocal)
+                    textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos recientes (Local): $%.2f", totalLocal)
                 }
             }
         }
@@ -357,22 +357,19 @@ class Dashboard : AppCompatActivity() {
 
     private fun isTransactionInMonthYear(transactionDateStr: String, month: Int, year: Int): Boolean {
         try {
-            // Handles ISO 8601 with or without milliseconds, and with Z or offset
+
             val odt = OffsetDateTime.parse(transactionDateStr)
             val zonedDateTimeUTC = odt.atZoneSameInstant(ZoneId.of("UTC"))
-            // Log.d("DateDebug", "Original: \"$transactionDateStr\", ParsedMonth UTC: ${zonedDateTimeUTC.monthValue}, ParsedYear UTC: ${zonedDateTimeUTC.year}")
             return zonedDateTimeUTC.monthValue == month && zonedDateTimeUTC.year == year
         } catch (e: DateTimeParseException) {
             Log.e("DashboardDateParse", "Error parseando fecha con OffsetDateTime: \"$transactionDateStr\"", e)
-            // Fallback for dates like "YYYY-MM-DD" without time/offset, assuming they are local and intended for UTC comparison
             try {
                 val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC") // Assume dates without time are UTC midnight
+                simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
                 val date = simpleDateFormat.parse(transactionDateStr)
                 if (date != null) {
                     val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                     cal.time = date
-                    // Log.d("DateDebugFallback", "Fallback ParsedMonth UTC: ${cal.get(Calendar.MONTH) + 1}, Fallback ParsedYear UTC: ${cal.get(Calendar.YEAR)}")
                     return (cal.get(Calendar.MONTH) + 1) == month && cal.get(Calendar.YEAR) == year
                 }
             } catch (e2: Exception) {
@@ -400,13 +397,12 @@ class Dashboard : AppCompatActivity() {
                 try {
                     val totalMontoMes = response.optDouble("totalMonto", 0.0)
                     if (endpoint == "gastos") {
-                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos del mes: $%.2f", totalMontoMes)
+                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos recientes: $%.2f", totalMontoMes)
                     } else {
-                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos del mes: $%.2f", totalMontoMes)
+                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos recientes: $%.2f", totalMontoMes)
                     }
                 } catch (e: Exception) {
                     Log.e("DashboardFetchTotal", "Error parsing total from API for $endpoint: ${e.message}")
-                    // If API fails to give total, try to calculate from local if needed, or show error
                     Toast.makeText(this, "Error al obtener total de API. Mostrando total local si es posible.", Toast.LENGTH_SHORT).show()
                     loadLocalTransactions(userId, endpoint, mes, anio) // Recalculate with local as fallback
                 }
