@@ -174,4 +174,49 @@ class TransactionService(private val context: Context) {
         }
         requestQueue.add(jsonObjectRequestWithAuth)
     }
+
+
+    fun eliminarTransaccion(
+        transactionId: String,
+        endpoint: String, // "gastos" or "ingresos"
+        onSuccess: (response: JSONObject) -> Unit,
+        onError: (errorMessage: String) -> Unit
+    ) {
+        val apiUrl = "$baseUrl/$endpoint/$transactionId"
+
+        val jsonObjectRequestWithAuth = object : JsonObjectRequest(
+            Request.Method.DELETE,
+            apiUrl,
+            null, // No body for DELETE request
+            Response.Listener { response ->
+                onSuccess(response)
+            },
+            Response.ErrorListener { error ->
+                val errorMessage = try {
+                    val networkResponse = error.networkResponse
+                    if (networkResponse?.data != null) {
+                        val responseBody = String(networkResponse.data, Charsets.UTF_8)
+                        val jsonError = JSONObject(responseBody)
+                        jsonError.optString("mensaje", error.message ?: "Error desconocido.") // "mensaje" from your API
+                    } else {
+                        error.message ?: "Error de red o servidor."
+                    }
+                } catch (e: Exception) {
+                    error.message ?: "Error de red o servidor."
+                }
+                onError(errorMessage)
+            }
+        ) {
+            @Throws(AuthFailureError::class)
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                val token = UsuarioGlobal.token
+                if (!token.isNullOrEmpty()) {
+                    headers["Authorization"] = "Bearer $token"
+                }
+                return headers
+            }
+        }
+        requestQueue.add(jsonObjectRequestWithAuth)
+    }
 }

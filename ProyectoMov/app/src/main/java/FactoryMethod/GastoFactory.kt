@@ -9,10 +9,8 @@ class GastoFactory : TransaccionFactory {
         monto: Double,
         tipo: String?,
         archivo: String?,
-        transactionId: String? // Parameter matches interface
+        transactionId: String?
     ): Transaccion {
-        // Pass transactionId to the Gasto constructor.
-        // If it's null (e.g., during new registration), Gasto's default null will be used.
         return Gasto(
             transactionId = transactionId,
             idUser = idUser,

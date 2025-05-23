@@ -10,20 +10,23 @@ import android.text.style.ClickableSpan
 import android.text.style.UnderlineSpan
 import android.util.Log
 import android.view.View
-import android.widget.Button // Import Button
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import java.text.SimpleDateFormat // For date formatting
-import java.util.Locale // For date formatting
+import java.text.SimpleDateFormat
+import java.util.Locale
+import Services.TransactionService
+import androidx.appcompat.app.AlertDialog
 
 class DetalleIngreso : AppCompatActivity() {
 
     private var transactionId: String? = null
-    private var rawFecha: String? = null // To store the original ISO date
+    private var rawFecha: String? = null
+    private val transactionService by lazy { TransactionService(this) }
 
     private fun formatarFechaBonita(fechaISO: String?): String {
         if (fechaISO.isNullOrEmpty()) return "Fecha no disponible"
@@ -38,6 +41,33 @@ class DetalleIngreso : AppCompatActivity() {
         }
     }
 
+    private fun mostrarDialogoConfirmacionEliminarIngreso() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Eliminación")
+            .setMessage("¿Estás seguro de que deseas eliminar este ingreso? Esta acción no se puede deshacer.")
+            .setPositiveButton("Eliminar") { dialog, which ->
+                eliminarIngresoActual()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun eliminarIngresoActual() {
+        transactionId?.let { id ->
+            transactionService.eliminarTransaccion(id, "ingresos",
+                onSuccess = { response ->
+                    Toast.makeText(this, response.optString("mensaje", "Ingreso eliminado"), Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, Dashboard::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                    finish()
+                },
+                onError = { errorMessage ->
+                    Toast.makeText(this, "Error al eliminar: $errorMessage", Toast.LENGTH_LONG).show()
+                }
+            )
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +83,7 @@ class DetalleIngreso : AppCompatActivity() {
         val archivoLinkTextView: TextView = findViewById(R.id.amount12)
         val backArrow: ImageView = findViewById(R.id.imageView)
         val btnEditarIngreso: Button = findViewById(R.id.btnEditarIngreso)
+        val btnEliminarIngreso: Button = findViewById(R.id.btnEliminarIngreso)
 
         backArrow.setOnClickListener {
             finish()
@@ -69,16 +100,16 @@ class DetalleIngreso : AppCompatActivity() {
 
             tituloTextView.text = nombre
             montoTextView.text = String.format("$%s", monto)
-            fechaTextView.text = formatarFechaBonita(rawFecha) // Format for display
+            fechaTextView.text = formatarFechaBonita(rawFecha)
             descripcionTextView.text = descripcion
             tipoTextView.text = tipo
 
             if (!urlArchivo.isNullOrEmpty()) {
-                // ... (existing file link logic)
+
                 etiquetaArchivoTextView.visibility = View.VISIBLE
                 archivoLinkTextView.visibility = View.VISIBLE
 
-                val textoLink = "Ver archivo adjunto." // Corrected text from original
+                val textoLink = "Ver archivo adjunto."
                 val spannableString = SpannableString(textoLink)
 
                 spannableString.setSpan(UnderlineSpan(), 0, textoLink.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -103,7 +134,6 @@ class DetalleIngreso : AppCompatActivity() {
                 spannableString.setSpan(clickableSpan, 0, textoLink.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 archivoLinkTextView.text = spannableString
                 archivoLinkTextView.movementMethod = LinkMovementMethod.getInstance()
-                // archivoLinkTextView.setTextColor(ContextCompat.getColor(this, R.color.white)) // Already set in updateDrawState
 
             } else {
                 etiquetaArchivoTextView.visibility = View.GONE
@@ -129,6 +159,13 @@ class DetalleIngreso : AppCompatActivity() {
                 }
             }
 
+            btnEliminarIngreso.setOnClickListener {
+                if (transactionId != null) {
+                    mostrarDialogoConfirmacionEliminarIngreso()
+                } else {
+                    Toast.makeText(this, "ID de transacción no disponible para eliminar.", Toast.LENGTH_SHORT).show()
+                }
+            }
         } ?: run {
 
             tituloTextView.text = "Detalle del Ingreso"

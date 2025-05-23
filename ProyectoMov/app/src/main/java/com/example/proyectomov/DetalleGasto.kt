@@ -15,17 +15,19 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat // For date formatting
 import java.util.Locale // For date formatting
+import Services.TransactionService
 
 class DetalleGasto : AppCompatActivity() {
 
     private var transactionId: String? = null
-    private var rawFecha: String? = null // To store the original ISO date
+    private var rawFecha: String? = null
+    private val transactionService by lazy { TransactionService(this) }
 
-    // Function to format ISO date to a more readable format
     private fun formatarFechaBonita(fechaISO: String?): String {
         if (fechaISO.isNullOrEmpty()) return "Fecha no disponible"
         return try {
@@ -35,7 +37,7 @@ class DetalleGasto : AppCompatActivity() {
             date?.let { outputFormat.format(it) } ?: fechaISO
         } catch (e: Exception) {
             Log.e("DateParseError", "Error formateando fecha: $fechaISO", e)
-            fechaISO.substringBefore("T") // Fallback
+            fechaISO.substringBefore("T")
         }
     }
 
@@ -53,6 +55,7 @@ class DetalleGasto : AppCompatActivity() {
         val archivoLinkTextView: TextView = findViewById(R.id.amount12)
         val backArrow: ImageView = findViewById(R.id.imageView)
         val btnEditarGasto: Button = findViewById(R.id.btnEditarGasto)
+        val btnEliminarGasto: Button = findViewById(R.id.btnEliminarGasto)
 
 
         backArrow.setOnClickListener {
@@ -70,12 +73,11 @@ class DetalleGasto : AppCompatActivity() {
 
             tituloTextView.text = nombre
             montoTextView.text = String.format("$%s", monto)
-            fechaTextView.text = formatarFechaBonita(rawFecha) // Format for display
+            fechaTextView.text = formatarFechaBonita(rawFecha)
             descripcionTextView.text = descripcion
             tipoTextView.text = tipo
 
             if (!urlArchivo.isNullOrEmpty()) {
-                // ... (existing file link logic remains the same)
                 etiquetaArchivoTextView.visibility = View.VISIBLE
                 archivoLinkTextView.visibility = View.VISIBLE
 
@@ -128,8 +130,15 @@ class DetalleGasto : AppCompatActivity() {
                 }
             }
 
+            btnEliminarGasto.setOnClickListener {
+                if (transactionId != null) {
+                    mostrarDialogoConfirmacionEliminar()
+                } else {
+                    Toast.makeText(this, "ID de transacción no disponible para eliminar.", Toast.LENGTH_SHORT).show()
+                }
+            }
         } ?: run {
-            // ... (existing fallback logic)
+
             tituloTextView.text = "Detalle del Gasto"
             montoTextView.text = "$0.00"
             fechaTextView.text = "Fecha no disponible"
@@ -139,6 +148,35 @@ class DetalleGasto : AppCompatActivity() {
             archivoLinkTextView.text = "Sin archivo adjunto"
             archivoLinkTextView.isClickable = false
             btnEditarGasto.visibility = View.GONE
+        }
+    }
+
+
+    private fun mostrarDialogoConfirmacionEliminar() {
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar Eliminación")
+            .setMessage("¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.")
+            .setPositiveButton("Eliminar") { dialog, which ->
+                eliminarGastoActual()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun eliminarGastoActual() {
+        transactionId?.let { id ->
+            transactionService.eliminarTransaccion(id, "gastos",
+                onSuccess = { response ->
+                    Toast.makeText(this, response.optString("mensaje", "Gasto eliminado"), Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, Dashboard::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                    finish()
+                },
+                onError = { errorMessage ->
+                    Toast.makeText(this, "Error al eliminar: $errorMessage", Toast.LENGTH_LONG).show()
+                }
+            )
         }
     }
 }

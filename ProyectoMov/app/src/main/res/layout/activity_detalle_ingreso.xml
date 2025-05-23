@@ -196,14 +196,27 @@
             android:id="@+id/btnEditarIngreso"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Editar"
+            android:layout_marginTop="36dp"
             android:backgroundTint="@color/bright_green"
+            android:text="Editar"
             android:textColor="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.269"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/amount12"
-            app:layout_constraintVertical_bias="0.2" />
+            app:layout_constraintTop_toBottomOf="@+id/amount12" />
+
+        <Button
+            android:id="@+id/btnEliminarIngreso"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:backgroundTint="@android:color/holo_red_dark"
+            android:text="Eliminar"
+            android:textColor="@color/white"
+            app:layout_constraintBottom_toBottomOf="@+id/btnEditarIngreso"
+            app:layout_constraintStart_toEndOf="@+id/btnEditarIngreso"
+            app:layout_constraintTop_toTopOf="@+id/btnEditarIngreso"
+            app:layout_constraintVertical_bias="0.0" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
