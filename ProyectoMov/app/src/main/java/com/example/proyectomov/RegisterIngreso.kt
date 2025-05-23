@@ -46,8 +46,6 @@ class RegisterIngreso : AppCompatActivity() {
     private var selectedImageUri: Uri? = null
     private var selectedFileUri: Uri? = null
 
-
-    // Request codes
     private val PICK_IMAGE_REQUEST = 1
     private val TAKE_PHOTO_REQUEST = 2
     private val PICK_FILE_REQUEST = 3

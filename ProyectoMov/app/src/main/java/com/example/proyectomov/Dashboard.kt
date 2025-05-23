@@ -98,18 +98,32 @@ class Dashboard : AppCompatActivity() {
         cargarTransaccionesDelMesActual()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Asegurarse de que los menús estén ocultos cuando la actividad se reanude
+        if (::menuOptions.isInitialized) { // Verificar si la vista ha sido inicializada
+            menuOptions.visibility = View.GONE
+        }
+        if (::menuOptionsUser.isInitialized) {
+            menuOptionsUser.visibility = View.GONE
+        }
+        if (::menuOptionsNav.isInitialized) {
+            menuOptionsNav.visibility = View.GONE
+        }
+    }
+
     private fun cargarImagenPerfil() {
         val profilePictureImageView = findViewById<ImageView>(R.id.profile_picture)
         val fotoPerfilUrl = UsuarioGlobal.fotoPerfil
         Glide.with(this)
             .load(fotoPerfilUrl)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .placeholder(R.drawable.placeholder_image)
-            .error(R.drawable.placeholder_image)
+            .placeholder(R.drawable.placeholder_image) // Considera agregar un placeholder
+            .error(R.drawable.placeholder_image) // Considera agregar una imagen de error
             .into(profilePictureImageView)
     }
 
-    private fun configurarListenersMenus() {
+    private fun configurarListenersMenus() { //
         fabMain.setOnClickListener { toggleMenu(menuOptions, R.anim.slide_in_fade, R.anim.slide_out_fade) }
         findViewById<Button>(R.id.btn_register_expense).setOnClickListener {
             startActivity(Intent(this, RegisterGasto::class.java))
@@ -151,7 +165,7 @@ class Dashboard : AppCompatActivity() {
         }
     }
 
-    private fun toggleMenu(menu: LinearLayout, animIn: Int, animOut: Int) {
+    private fun toggleMenu(menu: LinearLayout, animIn: Int, animOut: Int) { //
         if (menu.visibility == View.GONE) {
             val animation = AnimationUtils.loadAnimation(this, animIn)
             menu.visibility = View.VISIBLE
@@ -167,13 +181,13 @@ class Dashboard : AppCompatActivity() {
         }
     }
 
-    private fun configurarRadioGroupListener() {
+    private fun configurarRadioGroupListener() { //
         radioGroupTipoTransaccion.setOnCheckedChangeListener { group, checkedId ->
             cargarTransaccionesDelMesActual()
         }
     }
 
-    private fun cargarTransaccionesDelMesActual() {
+    private fun cargarTransaccionesDelMesActual() { //
         val calendar = Calendar.getInstance()
         val mesActual = calendar.get(Calendar.MONTH) + 1
         val anioActual = calendar.get(Calendar.YEAR)
@@ -189,7 +203,7 @@ class Dashboard : AppCompatActivity() {
         fetchTransacciones(tipoSeleccionado, mesActual, anioActual)
     }
 
-    private fun fetchTransacciones(endpoint: String, mes: Int, anio: Int) {
+    private fun fetchTransacciones(endpoint: String, mes: Int, anio: Int) { //
         val usuarioID = UsuarioGlobal.id
         if (usuarioID.isNullOrEmpty()) {
             Toast.makeText(this, "ID de usuario no disponible.", Toast.LENGTH_SHORT).show()
@@ -247,7 +261,7 @@ class Dashboard : AppCompatActivity() {
         )
     }
 
-    private fun parseAndDisplayGastos(jsonArray: JSONArray) {
+    private fun parseAndDisplayGastos(jsonArray: JSONArray) { //
         listaGastos.clear()
         for (i in 0 until jsonArray.length()) {
             val item = jsonArray.getJSONObject(i)
@@ -256,7 +270,7 @@ class Dashboard : AppCompatActivity() {
                     idUser = item.optString("Id_user", UsuarioGlobal.id ?: ""),
                     nombre = item.getString("Nombre"),
                     descripcion = item.optString("Descripcion"),
-                    fecha = formatarFechaBonita(item.getString("FechaLocal")),
+                    fecha = formatarFechaBonita(item.getString("FechaLocal")), //
                     monto = item.getDouble("Monto"),
                     tipo = item.getString("Tipo"),
                     archivo = item.optString("Archivo")
@@ -270,7 +284,7 @@ class Dashboard : AppCompatActivity() {
         gastoAdapter.notifyDataSetChanged()
     }
 
-    private fun parseAndDisplayIngresos(jsonArray: JSONArray) {
+    private fun parseAndDisplayIngresos(jsonArray: JSONArray) { //
         listaIngresos.clear()
         for (i in 0 until jsonArray.length()) {
             val item = jsonArray.getJSONObject(i)
@@ -279,7 +293,7 @@ class Dashboard : AppCompatActivity() {
                     idUser = item.optString("Id_user", UsuarioGlobal.id ?: ""),
                     nombre = item.getString("Nombre"),
                     descripcion = item.optString("Descripcion"),
-                    fecha = formatarFechaBonita(item.getString("FechaLocal")),
+                    fecha = formatarFechaBonita(item.getString("FechaLocal")), //
                     monto = item.getDouble("Monto"),
                     tipo = item.getString("Tipo"),
                     archivo = item.optString("Archivo")
@@ -293,19 +307,19 @@ class Dashboard : AppCompatActivity() {
         ingresoAdapter.notifyDataSetChanged()
     }
 
-    private fun formatarFechaBonita(fechaISO: String): String {
+    private fun formatarFechaBonita(fechaISO: String): String { //
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
             val date = inputFormat.parse(fechaISO)
-            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
+            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES")) //
             date?.let { outputFormat.format(it) } ?: fechaISO
         } catch (e: Exception) {
             Log.e("DateParseError", "Error formateando fecha: $fechaISO", e)
-            fechaISO.substringBefore("T")
+            fechaISO.substringBefore("T") //
         }
     }
 
-    private fun obtenerNombreMes(monthIndex: Int): String {
+    private fun obtenerNombreMes(monthIndex: Int): String { //
         val meses = arrayOf(
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -313,7 +327,7 @@ class Dashboard : AppCompatActivity() {
         return if (monthIndex in meses.indices) meses[monthIndex] else ""
     }
 
-    private fun onGastoClicked(gasto: Gasto) {
+    private fun onGastoClicked(gasto: Gasto) { //
         val intent = Intent(this, DetalleGasto::class.java).apply {
             putExtra("gastoId", gasto.idUser)
             putExtra("nombre", gasto.nombre)
@@ -326,7 +340,7 @@ class Dashboard : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun onIngresoClicked(ingreso: Ingreso) {
+    private fun onIngresoClicked(ingreso: Ingreso) { //
         val intent = Intent(this, DetalleIngreso::class.java).apply {
             putExtra("ingresoId", ingreso.idUser)
             putExtra("nombre", ingreso.nombre)

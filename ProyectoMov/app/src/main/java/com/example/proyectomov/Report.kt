@@ -12,6 +12,7 @@ import android.widget.Spinner
 import java.util.Calendar
 import android.app.DatePickerDialog
 import android.util.Log
+import android.widget.ImageView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
@@ -56,7 +57,10 @@ class Report : AppCompatActivity() {
 
         usuarioID = UsuarioGlobal.id.toString()
 
-
+        val backArrow: ImageView = findViewById(R.id.imageView4)
+        backArrow.setOnClickListener {
+            finish()
+        }
 
         val spinnerTipo: Spinner = findViewById(R.id.spinner2)
         val opcionesTipo = listOf("Ingreso", "Gasto")
