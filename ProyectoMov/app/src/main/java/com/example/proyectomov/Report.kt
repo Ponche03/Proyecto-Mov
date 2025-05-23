@@ -16,8 +16,7 @@ import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 
-// Data classes permanecen igual
-data class ReporteData( // Renombrada desde ReporteIngreso para generalizar
+data class ReporteData(
     val usuario: String,
     val mes: Int,
     val anio: Int,
@@ -31,7 +30,6 @@ data class TotalPorTipo(
     val total: Double
 )
 
-// ReporteGasto no se usa actualmente en esta lógica, pero se mantiene por si acaso
 data class ReporteGasto(
     val nombre: String,
     val fecha: String,
@@ -45,9 +43,9 @@ class Report : AppCompatActivity() {
     private var usuarioID: String = ""
     private var mesSeleccionado: Int = -1
     private var anioSeleccionado: Int = -1
-    private var tipoSeleccionado: String = "gastos" // Default to "gastos" as it's checked by default in XML
+    private var tipoSeleccionado: String = "gastos"
 
-    private lateinit var radioGroupTipoReporte: RadioGroup // Declarar RadioGroup
+    private lateinit var radioGroupTipoReporte: RadioGroup
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
