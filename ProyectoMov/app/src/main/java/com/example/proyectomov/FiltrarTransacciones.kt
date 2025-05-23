@@ -9,21 +9,32 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import Services.TransactionService
+import internalStorage.NetworkUtils
+import internalStorage.TransactionRepository
+import internalStorage.toDomainModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 
 class FiltrarTransacciones : AppCompatActivity() {
 
-    private lateinit var textViewTituloFiltro: TextView
     private lateinit var textViewFecha: TextView
     private lateinit var recyclerViewTransacciones: RecyclerView
     private lateinit var rightArrow: ImageView
@@ -31,6 +42,8 @@ class FiltrarTransacciones : AppCompatActivity() {
     private lateinit var backArrow: ImageView
     private lateinit var checkboxTodoElMes: CheckBox
     private lateinit var iconCalendar: ImageView
+    private lateinit var offlineIndicator: TextView
+
 
     private var usuarioID: String = ""
     private var paginaActual: Int = 1
@@ -43,11 +56,15 @@ class FiltrarTransacciones : AppCompatActivity() {
     private lateinit var jsonArrayKey: String
 
 
-    private val transactionService by lazy { TransactionService(this) }
-    private val gastoFactory = GastoFactory()
-    private val ingresoFactory = IngresoFactory()
+    private val transactionService by lazy { TransactionService(this) } //
+    private val gastoFactory = GastoFactory() //
+    private val ingresoFactory = IngresoFactory() //
+    private val transactionRepository: TransactionRepository by lazy { //
+        TransactionRepository(applicationContext)
+    }
 
-    private var listaTransacciones: MutableList<Transaccion> = mutableListOf()
+
+    private var listaTransaccionesAPI: MutableList<Transaccion> = mutableListOf()
     private lateinit var gastoAdapter: GastoAdapter
     private lateinit var ingresoAdapter: IngresoAdapter
 
@@ -55,7 +72,7 @@ class FiltrarTransacciones : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_filtrar_transacciones)
+        setContentView(R.layout.activity_filtrar_transacciones) //
 
         tipoFiltroActual = intent.getStringExtra("TIPO_FILTRO") ?: "gastos"
 
@@ -67,22 +84,24 @@ class FiltrarTransacciones : AppCompatActivity() {
             jsonArrayKey = "ingresos"
         }
 
-        usuarioID = UsuarioGlobal.id ?: ""
+        usuarioID = UsuarioGlobal.id ?: "" //
         if (usuarioID.isEmpty()) {
             Toast.makeText(this, "Error: Usuario no identificado.", Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
-        textViewFecha = findViewById(R.id.title2)
-        recyclerViewTransacciones = findViewById(R.id.recyclerViewTransacciones)
-        rightArrow = findViewById(R.id.right_arrow)
-        leftArrow = findViewById(R.id.left_arrow)
-        backArrow = findViewById(R.id.imageView4)
-        checkboxTodoElMes = findViewById(R.id.checkboxTodoElMes)
-        iconCalendar = findViewById(R.id.imageView5)
+        textViewFecha = findViewById(R.id.title2) //
+        recyclerViewTransacciones = findViewById(R.id.recyclerViewTransacciones) //
+        rightArrow = findViewById(R.id.right_arrow) //
+        leftArrow = findViewById(R.id.left_arrow) //
+        backArrow = findViewById(R.id.imageView4) //
+        checkboxTodoElMes = findViewById(R.id.checkboxTodoElMes) //
+        iconCalendar = findViewById(R.id.imageView5) //
+        offlineIndicator = findViewById(R.id.offline_indicator_filter) //
 
         recyclerViewTransacciones.layoutManager = LinearLayoutManager(this)
+
         gastoAdapter = GastoAdapter(mutableListOf(), this::onTransaccionItemClicked)
         ingresoAdapter = IngresoAdapter(mutableListOf(), this::onTransaccionItemClicked)
 
@@ -96,7 +115,7 @@ class FiltrarTransacciones : AppCompatActivity() {
         val calendario = Calendar.getInstance()
         anioSeleccionado = calendario.get(Calendar.YEAR)
         mesSeleccionado = calendario.get(Calendar.MONTH) + 1
-        diaSeleccionado = 0
+        diaSeleccionado = 0 // Default to whole month
 
         checkboxTodoElMes.isChecked = true
         actualizarTextViewFecha()
@@ -119,16 +138,24 @@ class FiltrarTransacciones : AppCompatActivity() {
         }
 
         rightArrow.setOnClickListener {
-            paginaActual++
-            cargarTransaccionesFiltradas()
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                paginaActual++
+                cargarTransaccionesFiltradas()
+            } else {
+                Toast.makeText(this, "Paginación no disponible en modo offline.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         leftArrow.setOnClickListener {
-            if (paginaActual > 1) {
-                paginaActual--
-                cargarTransaccionesFiltradas()
+            if (NetworkUtils.isNetworkAvailable(this)) {
+                if (paginaActual > 1) {
+                    paginaActual--
+                    cargarTransaccionesFiltradas()
+                } else {
+                    Toast.makeText(this, "Ya estás en la primera página.", Toast.LENGTH_SHORT).show()
+                }
             } else {
-                Toast.makeText(this, "Ya estás en la primera página.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Paginación no disponible en modo offline.", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -145,26 +172,22 @@ class FiltrarTransacciones : AppCompatActivity() {
 
         val datePickerDialog = DatePickerDialog(this, { _, year, month, dayOfMonth ->
             anioSeleccionado = year
-            mesSeleccionado = month + 1
+            mesSeleccionado = month + 1 // Month is 0-indexed
             diaSeleccionado = dayOfMonth
 
             if (checkboxTodoElMes.isChecked) {
                 checkboxTodoElMes.isChecked = false
-                paginaActual = 1
-                actualizarTextViewFecha()
-                cargarTransaccionesFiltradas()
-            } else {
-                paginaActual = 1
-                actualizarTextViewFecha()
-                cargarTransaccionesFiltradas()
             }
+            paginaActual = 1 // Reset page on new date selection
+            actualizarTextViewFecha()
+            cargarTransaccionesFiltradas()
         }, anioInicial, mesInicial, diaInicial)
 
         datePickerDialog.show()
     }
 
     private fun actualizarTextViewFecha() {
-        val nombreMes = obtenerNombreMes(mesSeleccionado - 1)
+        val nombreMes = obtenerNombreMes(mesSeleccionado - 1) // Month is 0-indexed for array
         if (checkboxTodoElMes.isChecked || diaSeleccionado == 0) {
             textViewFecha.text = "$nombreMes $anioSeleccionado"
         } else {
@@ -188,84 +211,175 @@ class FiltrarTransacciones : AppCompatActivity() {
             queryParams["dia"] = diaSeleccionado.toString()
         }
 
-        transactionService.obtenerTransacciones(endpointAPI, queryParams,
-            onSuccess = { response ->
-                try {
-                    val transaccionesJsonArray = response.getJSONArray(jsonArrayKey)
-                    val totalPaginas = response.optInt("totalPaginas", 1)
+        if (NetworkUtils.isNetworkAvailable(this)) { //
+            offlineIndicator.visibility = View.GONE //
+            transactionService.obtenerTransacciones(endpointAPI, queryParams, //
+                onSuccess = { response ->
+                    try {
+                        val transaccionesJsonArray = response.getJSONArray(jsonArrayKey)
+                        val totalPaginas = response.optInt("totalPaginas", 1)
+                        listaTransaccionesAPI.clear()
 
-                    listaTransacciones.clear()
+                        for (i in 0 until transaccionesJsonArray.length()) {
+                            val item = transaccionesJsonArray.getJSONObject(i)
+                            var actualIdUser = usuarioID
+                            val idUserField = item.opt("Id_user")
+                            if (idUserField is JSONObject) {
+                                actualIdUser = idUserField.optString("_id", usuarioID)
+                            } else if (idUserField is String && idUserField.isNotBlank()) {
+                                if (idUserField.startsWith("{")) {
+                                    try {
+                                        val jsonFromString = JSONObject(idUserField)
+                                        actualIdUser = jsonFromString.optString("_id", usuarioID)
+                                    } catch (e: org.json.JSONException) {
+                                        Log.w("FiltrarTrans", "$endpointAPI - Id_user is a string but not valid JSON: $idUserField. Using general userId.")
+                                    }
+                                } else {
+                                    actualIdUser = idUserField
+                                }
+                            }
 
-                    for (i in 0 until transaccionesJsonArray.length()) {
-                        val item = transaccionesJsonArray.getJSONObject(i)
-                        val transaccion: Transaccion = if (tipoFiltroActual == "gastos") {
-                            gastoFactory.crearTransaccion(
-                                transactionId = item.getString("_id"),
-                                idUser = item.optString("Id_user", usuarioID),
-                                nombre = item.getString("Nombre"),
-                                descripcion = item.optString("Descripcion"),
-                                fecha = item.getString("FechaLocal"),
-                                monto = item.getDouble("Monto"),
-                                tipo = item.getString("Tipo"),
-                                archivo = item.optString("Archivo")
-                            )
-                        } else {
-                            ingresoFactory.crearTransaccion(
-                                transactionId = item.getString("_id"),
-                                idUser = item.optString("Id_user", usuarioID),
-                                nombre = item.getString("Nombre"),
-                                descripcion = item.optString("Descripcion"),
-                                fecha = item.getString("FechaLocal"),
-                                monto = item.getDouble("Monto"),
-                                tipo = item.getString("Tipo"),
-                                archivo = item.optString("Archivo")
-                            )
+                            val transaccion: Transaccion = if (tipoFiltroActual == "gastos") { //
+                                gastoFactory.crearTransaccion( //
+                                    transactionId = item.getString("_id"),
+                                    idUser = actualIdUser,
+                                    nombre = item.getString("Nombre"),
+                                    descripcion = item.optString("Descripcion"),
+                                    fecha = item.getString("Fecha"),
+                                    monto = item.getDouble("Monto"),
+                                    tipo = item.getString("Tipo"),
+                                    archivo = item.optString("Archivo")
+                                )
+                            } else {
+                                ingresoFactory.crearTransaccion( //
+                                    transactionId = item.getString("_id"),
+                                    idUser = actualIdUser,
+                                    nombre = item.getString("Nombre"),
+                                    descripcion = item.optString("Descripcion"),
+                                    fecha = item.getString("Fecha"),
+                                    monto = item.getDouble("Monto"),
+                                    tipo = item.getString("Tipo"),
+                                    archivo = item.optString("Archivo")
+                                )
+                            }
+                            listaTransaccionesAPI.add(transaccion)
                         }
-                        listaTransacciones.add(transaccion)
+
+                        actualizarAdaptadorConDatos(listaTransaccionesAPI)
+                        leftArrow.isEnabled = paginaActual > 1
+                        rightArrow.isEnabled = paginaActual < totalPaginas
+
+                    } catch (e: Exception) {
+                        Log.e("FiltrarTransParse", "Error al parsear $tipoFiltroActual: ${e.message}", e)
+                        Toast.makeText(this, "Error al procesar datos de $tipoFiltroActual. Mostrando datos locales.", Toast.LENGTH_LONG).show()
+                        cargarTransaccionesLocales() // Fallback
                     }
-
-                    if (tipoFiltroActual == "gastos") {
-                        (gastoAdapter.gastos as MutableList<Gasto>).clear()
-                        (gastoAdapter.gastos as MutableList<Gasto>).addAll(listaTransacciones.filterIsInstance<Gasto>())
-                        gastoAdapter.notifyDataSetChanged()
-                    } else {
-                        (ingresoAdapter.ingresos as MutableList<Ingreso>).clear()
-                        (ingresoAdapter.ingresos as MutableList<Ingreso>).addAll(listaTransacciones.filterIsInstance<Ingreso>())
-                        ingresoAdapter.notifyDataSetChanged()
-                    }
-
-                    leftArrow.isEnabled = paginaActual > 1
-                    rightArrow.isEnabled = paginaActual < totalPaginas
-
-                } catch (e: Exception) {
-                    Log.e("FiltrarTransParse", "Error al parsear $tipoFiltroActual: ${e.message}", e)
-                    Toast.makeText(this, "Error al procesar datos de $tipoFiltroActual.", Toast.LENGTH_LONG).show()
-                    limpiarYNotificarAdaptador()
+                },
+                onError = { errorMessage ->
+                    Log.e("FiltrarTransFetch", "Error obteniendo $tipoFiltroActual de API: $errorMessage")
+                    Toast.makeText(this, "Error al cargar $tipoFiltroActual desde API: $errorMessage. Mostrando datos locales.", Toast.LENGTH_LONG).show()
+                    cargarTransaccionesLocales() // Fallback
                 }
-            },
-            onError = { errorMessage ->
-                Log.e("FiltrarTransFetch", "Error obteniendo $tipoFiltroActual: $errorMessage")
-                Toast.makeText(this, "Error al cargar $tipoFiltroActual: $errorMessage", Toast.LENGTH_LONG).show()
-                limpiarYNotificarAdaptador()
-            }
-        )
+            )
+        } else {
+            offlineIndicator.visibility = View.VISIBLE //
+            Toast.makeText(this, "Modo offline. Mostrando datos locales.", Toast.LENGTH_SHORT).show()
+            cargarTransaccionesLocales()
+        }
     }
 
-    private fun limpiarYNotificarAdaptador() {
+    private fun cargarTransaccionesLocales() {
+        lifecycleScope.launch {
+            if (tipoFiltroActual == "gastos") {
+                transactionRepository.getGastos(usuarioID).collectLatest { gastoEntities -> //
+                    val filteredLocalGastos = gastoEntities.filter { entity ->
+                        isTransactionInSelectedFilter(entity.fecha) //
+                    }.map { it.toDomainModel() } //
+                    actualizarAdaptadorConDatos(filteredLocalGastos)
+                    if (filteredLocalGastos.isEmpty()) {
+                        Toast.makeText(this@FiltrarTransacciones, "No hay gastos locales para este filtro.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else { // ingresos
+                transactionRepository.getIngresos(usuarioID).collectLatest { ingresoEntities -> //
+                    val filteredLocalIngresos = ingresoEntities.filter { entity ->
+                        isTransactionInSelectedFilter(entity.fecha) //
+                    }.map { it.toDomainModel() } //
+                    actualizarAdaptadorConDatos(filteredLocalIngresos)
+                    if (filteredLocalIngresos.isEmpty()) {
+                        Toast.makeText(this@FiltrarTransacciones, "No hay ingresos locales para este filtro.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            leftArrow.isEnabled = false
+            rightArrow.isEnabled = false
+        }
+    }
+
+    private fun actualizarAdaptadorConDatos(transacciones: List<Transaccion>) {
         if (tipoFiltroActual == "gastos") {
-            (gastoAdapter.gastos as MutableList<Gasto>).clear()
+            gastoAdapter.gastos.clear()
+            gastoAdapter.gastos.addAll(transacciones.filterIsInstance<Gasto>()) //
             gastoAdapter.notifyDataSetChanged()
         } else {
             (ingresoAdapter.ingresos as MutableList<Ingreso>).clear()
+            (ingresoAdapter.ingresos as MutableList<Ingreso>).addAll(transacciones.filterIsInstance<Ingreso>()) //
             ingresoAdapter.notifyDataSetChanged()
         }
     }
 
-    private fun onTransaccionItemClicked(transaccion: Transaccion) {
-        val intent: Intent = if (transaccion is Gasto) {
-            Intent(this, DetalleGasto::class.java)
+
+    private fun isTransactionInSelectedFilter(transactionDateStr: String): Boolean {
+        try {
+            val odt = OffsetDateTime.parse(transactionDateStr)
+            if (odt.year != anioSeleccionado) return false
+            if (odt.monthValue != mesSeleccionado) return false
+            if (!checkboxTodoElMes.isChecked && diaSeleccionado != 0) {
+                if (odt.dayOfMonth != diaSeleccionado) return false
+            }
+            return true
+        } catch (e: DateTimeParseException) {
+            Log.w("FilterDateParse", "DateTimeParseException for date: \"$transactionDateStr\". Attempting fallback.", e)
+
+            val formatsToTry = listOf(
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault()),// ISO with millis and offset
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault()),   // ISO without millis, with offset
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply{ timeZone = TimeZone.getTimeZone("UTC") },
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply{ timeZone = TimeZone.getTimeZone("UTC") },
+                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) // Date only
+            )
+            var parsedDate: Date? = null
+            for (format in formatsToTry) {
+                try {
+                    parsedDate = if (transactionDateStr.contains("T")) format.parse(transactionDateStr) else format.parse(transactionDateStr.substringBefore("T") + "T00:00:00.000Z")
+                    if (parsedDate != null) break
+                } catch (pe: java.text.ParseException) { /* Try next format */ }
+            }
+
+            if (parsedDate != null) {
+                val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                cal.time = parsedDate
+                if (cal.get(Calendar.YEAR) != anioSeleccionado) return false
+                if ((cal.get(Calendar.MONTH) + 1) != mesSeleccionado) return false
+                if (!checkboxTodoElMes.isChecked && diaSeleccionado != 0) {
+                    if (cal.get(Calendar.DAY_OF_MONTH) != diaSeleccionado) return false
+                }
+                return true
+            }
+            Log.e("FilterDateParseFallback", "Could not parse date with any fallback: \"$transactionDateStr\"")
+            return false
+        } catch (e: Exception) {
+            Log.e("FilterDateGeneric", "Generic error parsing date: \"$transactionDateStr\"", e)
+            return false
+        }
+    }
+
+
+    private fun onTransaccionItemClicked(transaccion: Transaccion) { //
+        val intent: Intent = if (transaccion is Gasto) { //
+            Intent(this, DetalleGasto::class.java) //
         } else { // Es Ingreso
-            Intent(this, DetalleIngreso::class.java)
+            Intent(this, DetalleIngreso::class.java) //
         }
 
         intent.apply {
@@ -278,18 +392,6 @@ class FiltrarTransacciones : AppCompatActivity() {
             putExtra("archivo", transaccion.archivo)
         }
         startActivity(intent)
-    }
-
-    private fun formatarFechaBonita(fechaISO: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
-            val date = inputFormat.parse(fechaISO)
-            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
-            date?.let { outputFormat.format(it) } ?: fechaISO
-        } catch (e: Exception) {
-            Log.e("DateParseError", "Error al formatear fecha: $fechaISO", e)
-            fechaISO.substringBefore("T")
-        }
     }
 
     private fun obtenerNombreMes(monthIndex: Int): String {

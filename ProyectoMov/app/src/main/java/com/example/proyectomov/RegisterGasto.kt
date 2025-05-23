@@ -1,6 +1,6 @@
 package com.example.proyectomov
 
-import UsuarioGlobal
+import UsuarioGlobal //
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -26,9 +26,14 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 
-import FactoryMethod.GastoFactory
-import Services.TransactionService
-import Services.FirebaseStorageService
+import FactoryMethod.GastoFactory //
+import Services.TransactionService // Not directly used, but repository uses it.
+import Services.FirebaseStorageService //
+import androidx.lifecycle.lifecycleScope
+import internalStorage.GastoEntity //
+import internalStorage.NetworkUtils //
+import internalStorage.TransactionRepository //
+import kotlinx.coroutines.launch
 
 
 class RegisterGasto : AppCompatActivity() {
@@ -51,35 +56,38 @@ class RegisterGasto : AppCompatActivity() {
 
     private var usuarioID: String = ""
 
-    private val gastoFactory = GastoFactory()
-    private val transactionService by lazy { TransactionService(this) }
-    private val firebaseStorageService = FirebaseStorageService()
+    private val gastoFactory = GastoFactory() //
+    // private val transactionService by lazy { TransactionService(this) } // Now using repository
+    private val firebaseStorageService = FirebaseStorageService() //
+    private val transactionRepository: TransactionRepository by lazy { //
+        TransactionRepository(applicationContext)
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_registro_gasto)
+        setContentView(R.layout.activity_registro_gasto) //
 
 
-        usuarioID = UsuarioGlobal.id ?: run {
+        usuarioID = UsuarioGlobal.id ?: run { //
             Toast.makeText(this, "Error: Usuario no identificado.", Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
 
-        nombreGasto = findViewById(R.id.nombre_gasto)
-        montoGasto = findViewById(R.id.monto_gasto)
-        descripcionGasto = findViewById(R.id.descripcion_gasto)
-        categoriaSpinner = findViewById(R.id.spinner)
-        adjuntarArchivoText = findViewById(R.id.profilepicture_text)
-        btnRegistrar = findViewById(R.id.btn_registrar)
-        botonRegresar = findViewById(R.id.imageView)
+        nombreGasto = findViewById(R.id.nombre_gasto) //
+        montoGasto = findViewById(R.id.monto_gasto) //
+        descripcionGasto = findViewById(R.id.descripcion_gasto) //
+        categoriaSpinner = findViewById(R.id.spinner) //
+        adjuntarArchivoText = findViewById(R.id.profilepicture_text) //
+        btnRegistrar = findViewById(R.id.btn_registrar) //
+        botonRegresar = findViewById(R.id.imageView) //
 
         val adapter = ArrayAdapter.createFromResource(
             this,
-            R.array.categorias_gasto_array,
+            R.array.categorias_gasto_array, //
             android.R.layout.simple_spinner_item
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -94,7 +102,8 @@ class RegisterGasto : AppCompatActivity() {
         }
 
         botonRegresar.setOnClickListener {
-            startActivity(Intent(this, Dashboard::class.java))
+            // Navigate back to Dashboard or appropriate screen
+            // startActivity(Intent(this, Dashboard::class.java))
             finish()
         }
     }
@@ -111,48 +120,65 @@ class RegisterGasto : AppCompatActivity() {
             return
         }
 
-        Toast.makeText(this, "Registrando gasto...", Toast.LENGTH_SHORT).show()
         btnRegistrar.isEnabled = false
+        Toast.makeText(this, "Registrando gasto...", Toast.LENGTH_SHORT).show()
 
         if (selectedFileUri != null) {
-            firebaseStorageService.uploadFile(
-                fileUri = selectedFileUri!!,
-                storagePath = "gastos_archivos",
-                onSuccess = { archivoUrl ->
-                    registrarGasto(nombre, monto, descripcion, categoria, archivoUrl)
-                },
-                onFailure = { errorMessage ->
-                    Toast.makeText(this, "Error al subir archivo: $errorMessage", Toast.LENGTH_LONG).show()
-                    btnRegistrar.isEnabled = true
-                }
-            )
-        } else {
-            registrarGasto(nombre, monto, descripcion, categoria, "")
+            if (NetworkUtils.isNetworkAvailable(this)) { //
+                firebaseStorageService.uploadFile( //
+                    fileUri = selectedFileUri!!,
+                    storagePath = "gastos_archivos",
+                    onSuccess = { archivoUrl -> // This is the remote URL
+                        proceedToSaveTransaction(nombre, monto, descripcion, categoria, archivoUrl)
+                    },
+                    onFailure = { errorMessage ->
+                        Toast.makeText(this, "Error al subir archivo: $errorMessage. Guardando con referencia local.", Toast.LENGTH_LONG).show()
+                        // Save with local URI string if Firebase upload fails despite network being "available" initially
+                        proceedToSaveTransaction(nombre, monto, descripcion, categoria, selectedFileUri.toString())
+                    }
+                )
+            } else { // Network is not available, save with local URI string
+                Toast.makeText(this, "Modo offline. Archivo se subirá más tarde.", Toast.LENGTH_SHORT).show()
+                proceedToSaveTransaction(nombre, monto, descripcion, categoria, selectedFileUri.toString())
+            }
+        } else { // No file selected
+            proceedToSaveTransaction(nombre, monto, descripcion, categoria, null)
         }
     }
 
-    private fun registrarGasto(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUrl: String) {
+    private fun proceedToSaveTransaction(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUriOrUrl: String?) {
         val fecha = obtenerFechaActual()
 
-        val nuevoGasto = gastoFactory.crearTransaccion(
+        // Create GastoEntity directly
+        val nuevoGastoEntity = GastoEntity( //
+            transactionId = null, // Will be set by repository if API call is successful
             idUser = usuarioID,
             nombre = nombre,
             descripcion = descripcion,
             fecha = fecha,
             monto = monto,
             tipo = categoria,
-            archivo = archivoUrl
+            archivo = archivoUriOrUrl, // This can be a remote URL or a local content URI string
+            isSynced = false, // Will be updated by repository
+            pendingAction = "CREATE" // Will be updated by repository
         )
 
-        transactionService.registrarTransaccion(nuevoGasto, "gastos", {
-            Toast.makeText(this, "Gasto registrado correctamente.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, Dashboard::class.java))
-            finish()
-        }, { errorMessage ->
-            Toast.makeText(this, "Error al registrar el gasto: $errorMessage", Toast.LENGTH_LONG).show()
-            btnRegistrar.isEnabled = true
-        })
+        lifecycleScope.launch {
+            try {
+                transactionRepository.registrarGasto(nuevoGastoEntity) //
+                Toast.makeText(this@RegisterGasto, "Gasto registrado.", Toast.LENGTH_SHORT).show()
+                // Navigate back to Dashboard or refresh
+                val intent = Intent(this@RegisterGasto, Dashboard::class.java) //
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
+            } catch (e: Exception) {
+                Toast.makeText(this@RegisterGasto, "Error al guardar gasto: ${e.message}", Toast.LENGTH_LONG).show()
+                btnRegistrar.isEnabled = true
+            }
+        }
     }
+
 
     private fun mostrarOpcionesDeArchivo() {
         val opciones = arrayOf("Seleccionar Imagen de Galería", "Tomar Foto", "Seleccionar Archivo")
@@ -181,7 +207,7 @@ class RegisterGasto : AppCompatActivity() {
             photoFile?.also {
                 val photoUri = FileProvider.getUriForFile(
                     this,
-                    "${applicationContext.packageName}.provider",
+                    "${applicationContext.packageName}.provider", //
                     it
                 )
                 selectedFileUri = photoUri
@@ -231,10 +257,11 @@ class RegisterGasto : AppCompatActivity() {
                     selectedFileUri?.let {
                         adjuntarArchivoText.text = "Imagen: ${it.lastPathSegment ?: "seleccionada"}"
                     } ?: run {
-                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo)
+                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
                     }
                 }
                 TAKE_PHOTO_REQUEST -> {
+                    // selectedFileUri is already set in tomarFoto()
                     adjuntarArchivoText.text = "Foto capturada: ${File(currentPhotoPath ?: "").name}"
                 }
                 PICK_FILE_REQUEST -> {
@@ -243,7 +270,7 @@ class RegisterGasto : AppCompatActivity() {
                         val fileName = it.lastPathSegment ?: "Archivo seleccionado."
                         adjuntarArchivoText.text = "Archivo: $fileName"
                     } ?: run {
-                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo)
+                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
                     }
                 }
             }
@@ -251,9 +278,8 @@ class RegisterGasto : AppCompatActivity() {
     }
 
     private fun obtenerFechaActual(): String {
-        // Formato ISO 8601 para la fecha, estándar para APIs
-        val formatoISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-        formatoISO.timeZone = TimeZone.getTimeZone("UTC") // Usar UTC para consistencia
+        val formatoISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        formatoISO.timeZone = TimeZone.getTimeZone("UTC")
         return formatoISO.format(Date())
     }
 }

@@ -17,6 +17,15 @@ import com.example.proyectomov.ui.theme.ProyectoMovTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.storage.FirebaseStorage
 
+import android.app.Application
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import internalStorage.SyncTransactionWorker //
+import java.util.concurrent.TimeUnit
+
 class MainActivity : ComponentActivity() {
 
 
@@ -31,8 +40,12 @@ class MainActivity : ComponentActivity() {
             Log.e("FirebaseInit", "Firebase failed to initialize")
         }
 
+        setupPeriodicSync()
+
         val intent = Intent(this, LogIn::class.java)
         startActivity(intent)
+
+
 
         //enableEdgeToEdge()
        // setContent {
@@ -46,7 +59,28 @@ class MainActivity : ComponentActivity() {
        //     }
        // }
     }
+
+    private fun setupPeriodicSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        // Create a periodic work request
+        val syncWorkRequest =
+            PeriodicWorkRequestBuilder<SyncTransactionWorker>(1, TimeUnit.MINUTES)
+
+                .setConstraints(constraints)
+                .build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "SyncTransactionWorker",
+            ExistingPeriodicWorkPolicy.KEEP,
+            syncWorkRequest
+        )
+    }
 }
+
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

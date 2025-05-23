@@ -248,10 +248,7 @@ class TransactionRepository(private val context: Context) {
     suspend fun synchronizeUserData(userId: String) {
         if (!NetworkUtils.isNetworkAvailable(context)) {
             Log.w("RepositorySync", "Network not available, cannot perform initial sync for user $userId.")
-            // Optionally, you might want to inform the user or rely on the SyncTransactionWorker
-            // to eventually fetch data when the network is back.
-            // For an initial login sync, it's often better to try, and if it fails,
-            // the app will operate with whatever is in the local DB (which would be empty for a new user).
+
             return
         }
 
