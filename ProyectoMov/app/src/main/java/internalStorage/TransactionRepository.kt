@@ -266,14 +266,38 @@ class TransactionRepository(private val context: Context) {
                     try {
                         val gastosJsonArray = response.getJSONArray("gastos")
                         val gastoEntities = mutableListOf<GastoEntity>()
+                        Log.d("RepositorySync", "GASTOS - Parseando ${gastosJsonArray.length()} gastos desde API para user $userId.")
                         for (i in 0 until gastosJsonArray.length()) {
                             val item = gastosJsonArray.getJSONObject(i)
+
+                            var actualIdUser = userId
+
+                            val idUserField = item.opt("Id_user")
+                            if (idUserField is JSONObject) {
+                                actualIdUser = idUserField.optString("_id", userId)
+                            } else if (idUserField is String && idUserField.isNotBlank()) {
+                                try {
+                                    val jsonFromString = JSONObject(idUserField.toString())
+                                    actualIdUser = jsonFromString.optString("_id", userId)
+                                } catch (e: org.json.JSONException) {
+
+                                    if (!idUserField.toString().startsWith("{")) {
+                                        actualIdUser = idUserField.toString()
+                                    } else {
+                                        Log.w("RepositorySync", "GASTOS - Id_user es una cadena JSON pero no se pudo extraer _id: $idUserField. Usando userId general.")
+                                    }
+                                }
+                            } else {
+                                Log.w("RepositorySync", "GASTOS - Id_user no es String ni JSONObject o está vacío en item. Usando userId general: $userId")
+                            }
+
+
                             val gastoEntity = GastoEntity(
                                 transactionId = item.getString("_id"),
-                                idUser = item.optString("Id_user", userId),
+                                idUser = actualIdUser,
                                 nombre = item.getString("Nombre"),
                                 descripcion = item.optString("Descripcion"),
-                                fecha = item.getString("FechaLocal"),
+                                fecha = item.getString("Fecha"),
                                 monto = item.getDouble("Monto"),
                                 tipo = item.getString("Tipo"),
                                 archivo = item.optString("Archivo"),
@@ -282,11 +306,20 @@ class TransactionRepository(private val context: Context) {
                             )
                             gastoEntities.add(gastoEntity)
                         }
+
+                        if (gastoEntities.isNotEmpty()) {
+                            Log.d("RepositorySync", "GASTOS - Lista de GastoEntity (tamaño ${gastoEntities.size}) lista para DAO. Primera entidad fecha: ${gastoEntities.first().fecha}, Nombre: ${gastoEntities.first().nombre}, UserID CORREGIDO: ${gastoEntities.first().idUser}")
+                        } else {
+                            Log.d("RepositorySync", "GASTOS - No se parsearon GastoEntity desde la API para user $userId.")
+                        }
+
                         gastoDao.clearAllForUser(userId)
+                        Log.d("RepositorySync", "GASTOS - clearAllForUser($userId) llamado.")
                         gastoDao.insertAll(gastoEntities)
-                        Log.d("RepositorySync", "Successfully synced ${gastoEntities.size} gastos for user $userId.")
+                        Log.d("RepositorySync", "GASTOS - insertAll llamado con ${gastoEntities.size} entidades para user $userId.")
+
                     } catch (e: Exception) {
-                        Log.e("RepositorySync", "Error processing/saving gastos from server for user $userId: ${e.message}", e)
+                        Log.e("RepositorySync", "GASTOS - Error procesando/guardando gastos desde servidor para user $userId: ${e.message}", e)
                     }
                 }
             },
@@ -304,14 +337,35 @@ class TransactionRepository(private val context: Context) {
                     try {
                         val ingresosJsonArray = response.getJSONArray("ingresos")
                         val ingresoEntities = mutableListOf<IngresoEntity>()
+                        Log.d("RepositorySync", "INGRESOS - Parseando ${ingresosJsonArray.length()} ingresos desde API para user $userId.")
                         for (i in 0 until ingresosJsonArray.length()) {
                             val item = ingresosJsonArray.getJSONObject(i)
+
+                            var actualIdUser = userId
+                            val idUserField = item.opt("Id_user")
+                            if (idUserField is JSONObject) {
+                                actualIdUser = idUserField.optString("_id", userId)
+                            } else if (idUserField is String && idUserField.isNotBlank()) {
+                                try {
+                                    val jsonFromString = JSONObject(idUserField.toString())
+                                    actualIdUser = jsonFromString.optString("_id", userId)
+                                } catch (e: org.json.JSONException) {
+                                    if (!idUserField.toString().startsWith("{")) {
+                                        actualIdUser = idUserField.toString()
+                                    } else {
+                                        Log.w("RepositorySync", "INGRESOS - Id_user es una cadena JSON pero no se pudo extraer _id: $idUserField. Usando userId general.")
+                                    }
+                                }
+                            } else {
+                                Log.w("RepositorySync", "INGRESOS - Id_user no es String ni JSONObject o está vacío en item. Usando userId general: $userId")
+                            }
+
                             val ingresoEntity = IngresoEntity(
                                 transactionId = item.getString("_id"),
-                                idUser = item.optString("Id_user", userId),
+                                idUser = actualIdUser,
                                 nombre = item.getString("Nombre"),
                                 descripcion = item.optString("Descripcion"),
-                                fecha = item.getString("FechaLocal"),
+                                fecha = item.getString("Fecha"),
                                 monto = item.getDouble("Monto"),
                                 tipo = item.getString("Tipo"),
                                 archivo = item.optString("Archivo"),
@@ -320,11 +374,20 @@ class TransactionRepository(private val context: Context) {
                             )
                             ingresoEntities.add(ingresoEntity)
                         }
+
+                        if (ingresoEntities.isNotEmpty()) {
+                            Log.d("RepositorySync", "INGRESOS - Lista de IngresoEntity (tamaño ${ingresoEntities.size}) lista para DAO. Primera entidad fecha: ${ingresoEntities.first().fecha}, Nombre: ${ingresoEntities.first().nombre}, UserID CORREGIDO: ${ingresoEntities.first().idUser}")
+                        } else {
+                            Log.d("RepositorySync", "INGRESOS - No se parsearon IngresoEntity desde la API para user $userId.")
+                        }
+
                         ingresoDao.clearAllForUser(userId)
+                        Log.d("RepositorySync", "INGRESOS - clearAllForUser($userId) llamado.")
                         ingresoDao.insertAll(ingresoEntities)
-                        Log.d("RepositorySync", "Successfully synced ${ingresoEntities.size} ingresos for user $userId.")
+                        Log.d("RepositorySync", "INGRESOS - insertAll llamado con ${ingresoEntities.size} entidades para user $userId.")
+
                     } catch (e: Exception) {
-                        Log.e("RepositorySync", "Error processing/saving ingresos from server for user $userId: ${e.message}", e)
+                        Log.e("RepositorySync", "INGRESOS - Error procesando/guardando ingresos desde servidor para user $userId: ${e.message}", e)
                     }
                 }
             },
@@ -332,6 +395,8 @@ class TransactionRepository(private val context: Context) {
                 Log.e("RepositorySync", "Error fetching ingresos from server for user $userId: $errorMessage")
             }
         )
+
+
     }
 
 
