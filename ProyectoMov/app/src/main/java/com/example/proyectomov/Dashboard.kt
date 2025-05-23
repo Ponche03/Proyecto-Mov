@@ -236,7 +236,7 @@ class Dashboard : AppCompatActivity() {
         transactionService.obtenerTransacciones(tipoApi, queryParams, //
             onSuccess = { response ->
                 try {
-                    val transaccionesJsonArray = response.getJSONArray(tipoApi) // "gastos" or "ingresos" based on tipoApi
+                    val transaccionesJsonArray = response.getJSONArray(tipoApi)
                     if (tipoApi == "gastos") {
                         listaGastosAdapter.clear()
                         for (i in 0 until transaccionesJsonArray.length()) {

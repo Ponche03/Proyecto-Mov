@@ -27,7 +27,6 @@ import java.util.TimeZone
 import java.util.UUID
 
 import FactoryMethod.GastoFactory //
-import Services.TransactionService // Not directly used, but repository uses it.
 import Services.FirebaseStorageService //
 import androidx.lifecycle.lifecycleScope
 import internalStorage.GastoEntity //
@@ -261,7 +260,6 @@ class RegisterGasto : AppCompatActivity() {
                     }
                 }
                 TAKE_PHOTO_REQUEST -> {
-                    // selectedFileUri is already set in tomarFoto()
                     adjuntarArchivoText.text = "Foto capturada: ${File(currentPhotoPath ?: "").name}"
                 }
                 PICK_FILE_REQUEST -> {
