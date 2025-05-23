@@ -16,7 +16,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
-
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -24,12 +23,17 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
-
 import FactoryMethod.IngresoFactory
 import android.widget.ImageView
-
 import services.FirebaseStorageService
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import org.json.JSONArray
+import org.json.JSONObject
+
 import services.TransactionService
+
 
 class RegisterIngreso : AppCompatActivity() {
 
@@ -53,6 +57,12 @@ class RegisterIngreso : AppCompatActivity() {
     private val transactionService by lazy { TransactionService(this) }
 
 
+    private val PREF_NAME = "OfflineIngresos"
+    private val MAX_REGISTROS = 2
+
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -67,6 +77,10 @@ class RegisterIngreso : AppCompatActivity() {
         adjuntarArchivoTextView = findViewById(R.id.profilepicture_text)
         btnRegistrarIngreso = findViewById(R.id.btn_login)
         botonRegresar = findViewById(R.id.imageView)
+
+
+        verificarYEnviarIngresosPendientes()
+
 
         val adapter = ArrayAdapter.createFromResource(
             this,
@@ -90,6 +104,69 @@ class RegisterIngreso : AppCompatActivity() {
         }
     }
 
+    private fun guardarIngresoLocalmente(nombre: String, descripcion: String, tipo: String, monto: Double, archivoUrl: String) {
+        val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val ingresosGuardados = sharedPreferences.getString("ingresos", "[]")
+
+        val jsonArray = JSONArray(ingresosGuardados)
+        if (jsonArray.length() >= MAX_REGISTROS) {
+            jsonArray.remove(0) // Elimina el ingreso más antiguo
+        }
+
+        val nuevoIngreso = JSONObject().apply {
+            put("nombre", nombre)
+            put("descripcion", descripcion)
+            put("tipo", tipo)
+            put("monto", monto)
+            put("archivo", archivoUrl)
+        }
+
+        jsonArray.put(nuevoIngreso)
+
+        sharedPreferences.edit().putString("ingresos", jsonArray.toString()).apply()
+        Toast.makeText(this, "Ingreso guardado sin conexión.", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun verificarYEnviarIngresosPendientes() {
+        if (hayConexionInternet()) {
+            val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val ingresosGuardados = sharedPreferences.getString("ingresos", "[]")
+
+            val jsonArray = JSONArray(ingresosGuardados)
+            for (i in 0 until jsonArray.length()) {
+                val ingreso = jsonArray.getJSONObject(i)
+                val nuevoIngreso = ingresoFactory.crearTransaccion(
+                    usuarioID,
+                    ingreso.getString("nombre"),
+                    ingreso.getString("descripcion"),
+                    obtenerFechaActual(),
+                    ingreso.getDouble("monto"),
+                    ingreso.getString("tipo"),
+                    ""
+                )
+
+                transactionService.registrarTransaccion(nuevoIngreso, "ingresos", {
+                    Toast.makeText(this, "Ingreso sincronizado con la API.", Toast.LENGTH_SHORT).show()
+                }, { errorMessage ->
+                    Toast.makeText(this, "Error al sincronizar ingreso: $errorMessage", Toast.LENGTH_LONG).show()
+                })
+
+            }
+
+            // Limpia los ingresos después de enviarlos
+            sharedPreferences.edit().remove("ingresos").apply()
+        }
+    }
+
+    private fun hayConexionInternet(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+
+        return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
+
+
+
     private fun handleIngresoRegistration() {
         val nombre = nombreIngresoEditText.text.toString().trim()
         val descripcion = descripcionIngresoEditText.text.toString().trim()
@@ -105,21 +182,50 @@ class RegisterIngreso : AppCompatActivity() {
         Toast.makeText(this, "Registrando ingreso...", Toast.LENGTH_SHORT).show()
         btnRegistrarIngreso.isEnabled = false
 
-        if (selectedImageUri != null) {
-            firebaseStorageService.uploadFile(
-                fileUri = selectedImageUri!!,
-                storagePath = "ingresos_archivos",
-                onSuccess = { archivoUrl ->
-                    registrarIngreso(nombre, descripcion, tipo, monto, archivoUrl)
-                },
-                onFailure = { errorMessage ->
-                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
-                    btnRegistrarIngreso.isEnabled = true
-                }
-            )
-        } else {
-            registrarIngreso(nombre, descripcion, tipo, monto, "")
+        if (!hayConexionInternet()) {
+
+
+            if (selectedImageUri != null) {
+                firebaseStorageService.uploadFile(
+                    fileUri = selectedImageUri!!,
+                    storagePath = "ingresos_archivos",
+                    onSuccess = { archivoUrl ->
+                        guardarIngresoLocalmente(nombre, descripcion, tipo, monto, archivoUrl)
+                    },
+                    onFailure = { errorMessage ->
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+                        btnRegistrarIngreso.isEnabled = true
+                    }
+                )
+            } else {
+
+                guardarIngresoLocalmente(nombre, descripcion, tipo, monto,"")
+            }
+
+            return
+        }else{
+
+            if (selectedImageUri != null) {
+                firebaseStorageService.uploadFile(
+                    fileUri = selectedImageUri!!,
+                    storagePath = "ingresos_archivos",
+                    onSuccess = { archivoUrl ->
+                        registrarIngreso(nombre, descripcion, tipo, monto, archivoUrl)
+                    },
+                    onFailure = { errorMessage ->
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+                        btnRegistrarIngreso.isEnabled = true
+                    }
+                )
+            } else {
+                registrarIngreso(nombre, descripcion, tipo, monto, "")
+            }
+
+
         }
+
+
+
     }
 
     private fun registrarIngreso(nombre: String, descripcion: String, tipo: String, monto: Double, archivoUrl: String) {
