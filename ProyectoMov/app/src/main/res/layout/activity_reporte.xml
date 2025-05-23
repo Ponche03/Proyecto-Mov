@@ -21,7 +21,6 @@
         app:srcCompat="@drawable/flecha_blanca" />
 
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -66,7 +65,7 @@
             android:layout_height="41dp"
             android:layout_marginTop="124dp"
             android:fontFamily="@font/poppins_light"
-            android:text="Seleccionar fecha:"
+            android:text="@string/Reportes_prompt"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textColor="@color/white"
@@ -103,12 +102,9 @@
             android:textAlignment="center"
             android:textSize="16sp"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.496"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.296" />
+            app:layout_constraintTop_toBottomOf="@+id/amount13" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

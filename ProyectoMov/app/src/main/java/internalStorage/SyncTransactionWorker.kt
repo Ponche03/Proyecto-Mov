@@ -1,5 +1,4 @@
-package internalStorage // Asegúrate que este sea el paquete correcto para tus clases de DB y Repositorio
-
+package internalStorage
 import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -12,18 +11,15 @@ import internalStorage.NetworkUtils
 class SyncTransactionWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
 
-    // Asegúrate que AppDatabase.getDatabase() y los DAOs son accesibles y correctos
     private val gastoDao = AppDatabase.getDatabase(applicationContext).gastoDao()
     private val ingresoDao = AppDatabase.getDatabase(applicationContext).ingresoDao()
 
-    // Asegúrate que TransactionRepository es accesible
     private val repository by lazy { TransactionRepository(applicationContext) }
-
 
     override suspend fun doWork(): Result {
         if (!NetworkUtils.isNetworkAvailable(applicationContext)) {
             Log.d("SyncWorker", "Network not available. Retrying later.")
-            return Result.retry() // Retry if network is not available
+            return Result.retry()
         }
 
         Log.d("SyncWorker", "Starting sync process...")

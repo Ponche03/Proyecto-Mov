@@ -45,17 +45,15 @@ class UpdateGastoActivity : AppCompatActivity() {
 
     private var selectedFileUri: Uri? = null
     private var currentPhotoPath: String? = null
-    private var existingFileUrl: String? = null // URL del archivo existente en el servidor
+    private var existingFileUrl: String? = null
     private var transactionId: String? = null
-    private var localIdGasto: Long = 0L // Para identificar entidad si no tiene transactionId
-    private var originalFechaISO: String? = null // Para mantener la fecha original
+    private var localIdGasto: Long = 0L
+    private var originalFechaISO: String? = null
 
     private val PICK_IMAGE_REQUEST = 1
     private val TAKE_PHOTO_REQUEST = 2
     private val PICK_FILE_REQUEST = 3
 
-    // private val gastoFactory = GastoFactory() // No necesitamos crear Gasto domain object aquí
-    // private val transactionService by lazy { TransactionService(this) } // Replaced
     private val firebaseStorageService = FirebaseStorageService() //
     private val transactionRepository: TransactionRepository by lazy { //
         TransactionRepository(applicationContext)
@@ -94,7 +92,7 @@ class UpdateGastoActivity : AppCompatActivity() {
             if (currentGastoEntity != null) {
                 populateUIFromEntity(currentGastoEntity!!)
             } else {
-                // Fallback to intent extras if entity not found in DB
+
                 Log.w("UpdateGasto", "GastoEntity no encontrada en DB, usando datos del Intent como fallback.")
                 populateUIFromIntentFallback()
                 if (transactionId == null && localIdGasto == 0L) {
@@ -259,7 +257,7 @@ class UpdateGastoActivity : AppCompatActivity() {
 
     private fun mostrarOpcionesDeArchivo() {
         val opciones = mutableListOf("Seleccionar Imagen de Galería", "Tomar Foto", "Seleccionar Archivo")
-        if (existingFileUrl != null || selectedFileUri != null) { // Si hay un archivo actual (remoto o localmente seleccionado)
+        if (existingFileUrl != null || selectedFileUri != null) {
             opciones.add("Quitar Archivo Actual")
         }
 
@@ -271,8 +269,8 @@ class UpdateGastoActivity : AppCompatActivity() {
                     "Tomar Foto" -> tomarFoto()
                     "Seleccionar Archivo" -> abrirSelectorDeArchivos()
                     "Quitar Archivo Actual" -> {
-                        selectedFileUri = null // Limpiar cualquier nueva selección
-                        existingFileUrl = null // Marcar que el archivo existente (o el nuevo no subido) debe quitarse
+                        selectedFileUri = null
+                        existingFileUrl = null
                         adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
                         currentFileText.text = "Archivo actual: ninguno (se quitará al actualizar)"
                         Toast.makeText(this, "El archivo se quitará al actualizar.", Toast.LENGTH_SHORT).show()

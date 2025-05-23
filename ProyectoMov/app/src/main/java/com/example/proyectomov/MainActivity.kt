@@ -46,18 +46,6 @@ class MainActivity : ComponentActivity() {
         startActivity(intent)
 
 
-
-        //enableEdgeToEdge()
-       // setContent {
-       //     ProyectoMovTheme {
-       //         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-       //             Greeting(
-       //                 name = "Android",
-       //                 modifier = Modifier.padding(innerPadding)
-       //             )
-       //         }
-       //     }
-       // }
     }
 
     private fun setupPeriodicSync() {
