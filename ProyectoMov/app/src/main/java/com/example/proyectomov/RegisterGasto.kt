@@ -56,7 +56,7 @@ class RegisterGasto : AppCompatActivity() {
     private var usuarioID: String = ""
 
     private val gastoFactory = GastoFactory() //
-    // private val transactionService by lazy { TransactionService(this) } // Now using repository
+
     private val firebaseStorageService = FirebaseStorageService() //
     private val transactionRepository: TransactionRepository by lazy { //
         TransactionRepository(applicationContext)
@@ -101,8 +101,7 @@ class RegisterGasto : AppCompatActivity() {
         }
 
         botonRegresar.setOnClickListener {
-            // Navigate back to Dashboard or appropriate screen
-            // startActivity(Intent(this, Dashboard::class.java))
+             startActivity(Intent(this, Dashboard::class.java))
             finish()
         }
     }
@@ -127,7 +126,7 @@ class RegisterGasto : AppCompatActivity() {
                 firebaseStorageService.uploadFile( //
                     fileUri = selectedFileUri!!,
                     storagePath = "gastos_archivos",
-                    onSuccess = { archivoUrl -> // This is the remote URL
+                    onSuccess = { archivoUrl ->
                         proceedToSaveTransaction(nombre, monto, descripcion, categoria, archivoUrl)
                     },
                     onFailure = { errorMessage ->
@@ -148,26 +147,25 @@ class RegisterGasto : AppCompatActivity() {
     private fun proceedToSaveTransaction(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUriOrUrl: String?) {
         val fecha = obtenerFechaActual()
 
-        // Create GastoEntity directly
         val nuevoGastoEntity = GastoEntity( //
-            transactionId = null, // Will be set by repository if API call is successful
+            transactionId = null,
             idUser = usuarioID,
             nombre = nombre,
             descripcion = descripcion,
             fecha = fecha,
             monto = monto,
             tipo = categoria,
-            archivo = archivoUriOrUrl, // This can be a remote URL or a local content URI string
-            isSynced = false, // Will be updated by repository
-            pendingAction = "CREATE" // Will be updated by repository
+            archivo = archivoUriOrUrl,
+            isSynced = false,
+            pendingAction = "CREATE"
         )
 
         lifecycleScope.launch {
             try {
-                transactionRepository.registrarGasto(nuevoGastoEntity) //
+                transactionRepository.registrarGasto(nuevoGastoEntity)
                 Toast.makeText(this@RegisterGasto, "Gasto registrado.", Toast.LENGTH_SHORT).show()
                 // Navigate back to Dashboard or refresh
-                val intent = Intent(this@RegisterGasto, Dashboard::class.java) //
+                val intent = Intent(this@RegisterGasto, Dashboard::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(intent)
                 finish()

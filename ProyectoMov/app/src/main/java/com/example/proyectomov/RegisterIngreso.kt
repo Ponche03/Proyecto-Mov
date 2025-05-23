@@ -95,7 +95,7 @@ class RegisterIngreso : AppCompatActivity() {
         }
 
         botonRegresar.setOnClickListener {
-            // startActivity(Intent(this, Dashboard::class.java))
+            startActivity(Intent(this, Dashboard::class.java))
             finish()
         }
     }
@@ -121,7 +121,7 @@ class RegisterIngreso : AppCompatActivity() {
                 firebaseStorageService.uploadFile( //
                     fileUri = selectedFileUri!!,
                     storagePath = "ingresos_archivos",
-                    onSuccess = { archivoUrl -> // Remote URL
+                    onSuccess = { archivoUrl ->
                         proceedToSaveTransaction(nombre, descripcion, tipo, monto, archivoUrl)
                     },
                     onFailure = { errorMessage ->
@@ -199,7 +199,7 @@ class RegisterIngreso : AppCompatActivity() {
                     "${applicationContext.packageName}.provider", //
                     it
                 )
-                selectedFileUri = photoUri // Use the consolidated variable
+                selectedFileUri = photoUri
                 currentPhotoPath = it.absolutePath
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
                 startActivityForResult(intent, TAKE_PHOTO_REQUEST)
