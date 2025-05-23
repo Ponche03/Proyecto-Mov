@@ -22,7 +22,7 @@ class TransactionRepository(private val context: Context) {
     private val transactionService = TransactionService(context) //
     val gastoDao = AppDatabase.getDatabase(context).gastoDao()
     val ingresoDao = AppDatabase.getDatabase(context).ingresoDao()
-    private val repositoryScope = CoroutineScope(Dispatchers.IO) // A dedicated scope for repository operations
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
     // --- Gasto Operations ---
     suspend fun registrarGasto(gasto: GastoEntity) {
@@ -35,8 +35,6 @@ class TransactionRepository(private val context: Context) {
                         gasto.transactionId = serverId
                         gasto.isSynced = true
                         gasto.pendingAction = null
-                        // If there was a local file, its URL from Firebase should be in gasto.archivo by now
-                        // And gasto.localFileUri should be cleared, gasto.archivoUrlSynced = true
                         repositoryScope.launch { gastoDao.insertGasto(gasto) }
                         Log.d("Repository", "Gasto registered online and synced: ${gasto.nombre}")
                     },
@@ -64,7 +62,6 @@ class TransactionRepository(private val context: Context) {
     suspend fun actualizarGasto(gasto: GastoEntity) {
         if (NetworkUtils.isNetworkAvailable(context) && gasto.transactionId != null) {
             try {
-                // Similar to registrar, handle file upload if gasto.localFileUri is present and archivoUrlSynced is false
                 transactionService.actualizarTransaccion(gasto.transactionId!!, gasto.toDomain(), "gastos", //
                     onSuccess = {
                         gasto.isSynced = true
@@ -88,8 +85,7 @@ class TransactionRepository(private val context: Context) {
         } else {
             gasto.isSynced = false
             gasto.pendingAction = if (gasto.transactionId == null && gasto.pendingAction != "CREATE") "CREATE" else "UPDATE"
-            // If it's a new offline item being "updated", ensure it's still marked as CREATE.
-            // If it's an existing synced/unsynced item, mark as UPDATE.
+
             if (gasto.pendingAction == "CREATE") {
                 repositoryScope.launch { gastoDao.insertGasto(gasto) } // Or update if it had a localId
             } else {
@@ -121,10 +117,10 @@ class TransactionRepository(private val context: Context) {
                 repositoryScope.launch { gastoDao.updateGasto(gasto) }
             }
         } else {
-            if (gasto.transactionId == null && gasto.pendingAction == "CREATE") { // Only created offline
+            if (gasto.transactionId == null && gasto.pendingAction == "CREATE") {
                 repositoryScope.launch { gastoDao.deleteGastoByLocalId(gasto.localId) }
                 Log.d("Repository", "Gasto ${gasto.nombre} (created offline) deleted locally before sync.")
-            } else { // Existed on server or was an update to an offline item
+            } else {
                 gasto.pendingAction = "DELETE"
                 gasto.isSynced = false
                 repositoryScope.launch { gastoDao.updateGasto(gasto) }
@@ -133,7 +129,7 @@ class TransactionRepository(private val context: Context) {
         }
     }
 
-    fun getGastos(userId: String): Flow<List<GastoEntity>> { // Removed queryParams for simplification, add back if needed
+    fun getGastos(userId: String): Flow<List<GastoEntity>> {
         return gastoDao.getGastosByUser(userId)
     }
 
@@ -244,7 +240,6 @@ class TransactionRepository(private val context: Context) {
         return ingresoDao.getIngresosByUser(userId) //
     }
 
-    // New function to synchronize all user data from server
     suspend fun synchronizeUserData(userId: String) {
         if (!NetworkUtils.isNetworkAvailable(context)) {
             Log.w("RepositorySync", "Network not available, cannot perform initial sync for user $userId.")
@@ -396,8 +391,6 @@ class TransactionRepository(private val context: Context) {
 
     }
 
-
-    // --- Helper to convert Entity to Domain model for TransactionService ---
     private fun GastoEntity.toDomain(): FactoryMethod.Gasto { //
         return FactoryMethod.Gasto( //
             transactionId = this.transactionId,
@@ -407,7 +400,7 @@ class TransactionRepository(private val context: Context) {
             fecha = this.fecha,
             monto = this.monto,
             tipo = this.tipo,
-            archivo = this.archivo // This should be the server URL if synced, or null/local temp if not
+            archivo = this.archivo
         )
     }
 
@@ -420,7 +413,7 @@ class TransactionRepository(private val context: Context) {
             fecha = this.fecha,
             monto = this.monto,
             tipo = this.tipo,
-            archivo = this.archivo // This should be the server URL if synced, or null/local temp if not
+            archivo = this.archivo
         )
     }
 }
