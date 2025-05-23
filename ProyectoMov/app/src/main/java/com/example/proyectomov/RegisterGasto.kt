@@ -1,5 +1,7 @@
 package com.example.proyectomov
 
+import UsuarioGlobal //
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -24,9 +26,14 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 
-import FactoryMethod.GastoFactory
-import services.TransactionService
-import services.FirebaseStorageService
+import FactoryMethod.GastoFactory //
+import Services.TransactionService // Not directly used, but repository uses it.
+import Services.FirebaseStorageService //
+import androidx.lifecycle.lifecycleScope
+import internalStorage.GastoEntity //
+import internalStorage.NetworkUtils //
+import internalStorage.TransactionRepository //
+import kotlinx.coroutines.launch
 
 
 class RegisterGasto : AppCompatActivity() {
@@ -37,49 +44,57 @@ class RegisterGasto : AppCompatActivity() {
     private lateinit var categoriaSpinner: Spinner
     private lateinit var adjuntarArchivoText: TextView
     private lateinit var btnRegistrar: Button
-    private lateinit var clipDePapelImage: ImageView
     private lateinit var botonRegresar: ImageView
 
 
-    private var selectedImageUri: Uri? = null
+    private var selectedFileUri: Uri? = null
+
     private val PICK_IMAGE_REQUEST = 1
     private val TAKE_PHOTO_REQUEST = 2
+    private val PICK_FILE_REQUEST = 3
     private var currentPhotoPath: String? = null
 
     private var usuarioID: String = ""
 
-    private val gastoFactory = GastoFactory()
-
-    private val transactionService by lazy { TransactionService(this) }
-    private val firebaseStorageService = FirebaseStorageService()
+    private val gastoFactory = GastoFactory() //
+    // private val transactionService by lazy { TransactionService(this) } // Now using repository
+    private val firebaseStorageService = FirebaseStorageService() //
+    private val transactionRepository: TransactionRepository by lazy { //
+        TransactionRepository(applicationContext)
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_registro_gasto)
+        setContentView(R.layout.activity_registro_gasto) //
 
-        usuarioID = UsuarioGlobal.id.toString()
 
-        nombreGasto = findViewById(R.id.nombre_gasto)
-        montoGasto = findViewById(R.id.monto_gasto)
-        descripcionGasto = findViewById(R.id.descripcion_gasto)
-        categoriaSpinner = findViewById(R.id.spinner)
-        adjuntarArchivoText = findViewById(R.id.profilepicture_text)
-        btnRegistrar = findViewById(R.id.btn_registrar)
-        clipDePapelImage = findViewById(R.id.imageView5)
-        botonRegresar = findViewById(R.id.imageView)
+        usuarioID = UsuarioGlobal.id ?: run { //
+            Toast.makeText(this, "Error: Usuario no identificado.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+
+        nombreGasto = findViewById(R.id.nombre_gasto) //
+        montoGasto = findViewById(R.id.monto_gasto) //
+        descripcionGasto = findViewById(R.id.descripcion_gasto) //
+        categoriaSpinner = findViewById(R.id.spinner) //
+        adjuntarArchivoText = findViewById(R.id.profilepicture_text) //
+        btnRegistrar = findViewById(R.id.btn_registrar) //
+        botonRegresar = findViewById(R.id.imageView) //
 
         val adapter = ArrayAdapter.createFromResource(
             this,
-            R.array.categorias_gasto_array,
+            R.array.categorias_gasto_array, //
             android.R.layout.simple_spinner_item
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         categoriaSpinner.adapter = adapter
 
         adjuntarArchivoText.setOnClickListener {
-            mostrarOpcionesDeImagen()
+            mostrarOpcionesDeArchivo()
         }
 
         btnRegistrar.setOnClickListener {
@@ -87,7 +102,8 @@ class RegisterGasto : AppCompatActivity() {
         }
 
         botonRegresar.setOnClickListener {
-            startActivity(Intent(this, Dashboard::class.java))
+            // Navigate back to Dashboard or appropriate screen
+            // startActivity(Intent(this, Dashboard::class.java))
             finish()
         }
     }
@@ -104,57 +120,75 @@ class RegisterGasto : AppCompatActivity() {
             return
         }
 
-        Toast.makeText(this, "Registrando gasto...", Toast.LENGTH_SHORT).show()
         btnRegistrar.isEnabled = false
+        Toast.makeText(this, "Registrando gasto...", Toast.LENGTH_SHORT).show()
 
-        if (selectedImageUri != null) {
-            firebaseStorageService.uploadFile(
-                fileUri = selectedImageUri!!,
-                storagePath = "gastos_archivos",
-                onSuccess = { archivoUrl ->
-                    registrarGasto(nombre, monto, descripcion, categoria, archivoUrl)
-                },
-                onFailure = { errorMessage ->
-                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
-                    btnRegistrar.isEnabled = true
-                }
-            )
-        } else {
-            registrarGasto(nombre, monto, descripcion, categoria, "")
+        if (selectedFileUri != null) {
+            if (NetworkUtils.isNetworkAvailable(this)) { //
+                firebaseStorageService.uploadFile( //
+                    fileUri = selectedFileUri!!,
+                    storagePath = "gastos_archivos",
+                    onSuccess = { archivoUrl -> // This is the remote URL
+                        proceedToSaveTransaction(nombre, monto, descripcion, categoria, archivoUrl)
+                    },
+                    onFailure = { errorMessage ->
+                        Toast.makeText(this, "Error al subir archivo: $errorMessage. Guardando con referencia local.", Toast.LENGTH_LONG).show()
+                        // Save with local URI string if Firebase upload fails despite network being "available" initially
+                        proceedToSaveTransaction(nombre, monto, descripcion, categoria, selectedFileUri.toString())
+                    }
+                )
+            } else { // Network is not available, save with local URI string
+                Toast.makeText(this, "Modo offline. Archivo se subirá más tarde.", Toast.LENGTH_SHORT).show()
+                proceedToSaveTransaction(nombre, monto, descripcion, categoria, selectedFileUri.toString())
+            }
+        } else { // No file selected
+            proceedToSaveTransaction(nombre, monto, descripcion, categoria, null)
         }
     }
 
-    private fun registrarGasto(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUrl: String) {
+    private fun proceedToSaveTransaction(nombre: String, monto: Double, descripcion: String, categoria: String, archivoUriOrUrl: String?) {
         val fecha = obtenerFechaActual()
 
-        val nuevoGasto = gastoFactory.crearTransaccion(
+        // Create GastoEntity directly
+        val nuevoGastoEntity = GastoEntity( //
+            transactionId = null, // Will be set by repository if API call is successful
             idUser = usuarioID,
             nombre = nombre,
             descripcion = descripcion,
             fecha = fecha,
             monto = monto,
             tipo = categoria,
-            archivo = archivoUrl
+            archivo = archivoUriOrUrl, // This can be a remote URL or a local content URI string
+            isSynced = false, // Will be updated by repository
+            pendingAction = "CREATE" // Will be updated by repository
         )
 
-        transactionService.registrarTransaccion(nuevoGasto, "gastos", {
-            Toast.makeText(this, "Gasto registrado correctamente.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, Dashboard::class.java))
-            finish()
-        }, { errorMessage ->
-            Toast.makeText(this, "Error al registrar el gasto: $errorMessage", Toast.LENGTH_LONG).show()
-            btnRegistrar.isEnabled = true
-        })
+        lifecycleScope.launch {
+            try {
+                transactionRepository.registrarGasto(nuevoGastoEntity) //
+                Toast.makeText(this@RegisterGasto, "Gasto registrado.", Toast.LENGTH_SHORT).show()
+                // Navigate back to Dashboard or refresh
+                val intent = Intent(this@RegisterGasto, Dashboard::class.java) //
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                finish()
+            } catch (e: Exception) {
+                Toast.makeText(this@RegisterGasto, "Error al guardar gasto: ${e.message}", Toast.LENGTH_LONG).show()
+                btnRegistrar.isEnabled = true
+            }
+        }
     }
 
-    private fun mostrarOpcionesDeImagen() {
-        val opciones = arrayOf("Seleccionar desde Galería", "Tomar Foto")
+
+    private fun mostrarOpcionesDeArchivo() {
+        val opciones = arrayOf("Seleccionar Imagen de Galería", "Tomar Foto", "Seleccionar Archivo")
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Selecciona una opción")
+        builder.setTitle("Selecciona una opción para adjuntar")
         builder.setItems(opciones) { _, which ->
             when (which) {
                 0 -> abrirGaleria()
                 1 -> tomarFoto()
+                2 -> abrirSelectorDeArchivos()
             }
         }
         builder.show()
@@ -173,10 +207,10 @@ class RegisterGasto : AppCompatActivity() {
             photoFile?.also {
                 val photoUri = FileProvider.getUriForFile(
                     this,
-                    "${applicationContext.packageName}.provider",
+                    "${applicationContext.packageName}.provider", //
                     it
                 )
-                selectedImageUri = photoUri
+                selectedFileUri = photoUri
                 currentPhotoPath = it.absolutePath
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
                 startActivityForResult(intent, TAKE_PHOTO_REQUEST)
@@ -186,12 +220,26 @@ class RegisterGasto : AppCompatActivity() {
         }
     }
 
+    private fun abrirSelectorDeArchivos() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "*/*"
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        try {
+            startActivityForResult(
+                Intent.createChooser(intent, "Selecciona un Archivo para Subir"),
+                PICK_FILE_REQUEST
+            )
+        } catch (ex: android.content.ActivityNotFoundException) {
+            Toast.makeText(this, "Por favor, instala un administrador de archivos.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun crearArchivoDeImagen(): File? {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val nombreImagen = "JPEG_${timeStamp}_${UUID.randomUUID()}.jpg"
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES) //
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return try {
-            File.createTempFile(nombreImagen, ".jpg", storageDir).apply { //
+            File.createTempFile(nombreImagen, ".jpg", storageDir).apply {
                 currentPhotoPath = absolutePath
             }
         } catch (e: IOException) {
@@ -202,25 +250,36 @@ class RegisterGasto : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
+        if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
                 PICK_IMAGE_REQUEST -> {
-                    selectedImageUri = data?.data
-                    adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo)
-                    selectedImageUri?.let {
-                        adjuntarArchivoText.text = "Archivo: ${it.lastPathSegment ?: "Imagen seleccionada"}"
+                    selectedFileUri = data?.data
+                    selectedFileUri?.let {
+                        adjuntarArchivoText.text = "Imagen: ${it.lastPathSegment ?: "seleccionada"}"
+                    } ?: run {
+                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
                     }
                 }
                 TAKE_PHOTO_REQUEST -> {
-                    adjuntarArchivoText.text = "Foto capturada."
+                    // selectedFileUri is already set in tomarFoto()
+                    adjuntarArchivoText.text = "Foto capturada: ${File(currentPhotoPath ?: "").name}"
+                }
+                PICK_FILE_REQUEST -> {
+                    selectedFileUri = data?.data
+                    selectedFileUri?.let {
+                        val fileName = it.lastPathSegment ?: "Archivo seleccionado."
+                        adjuntarArchivoText.text = "Archivo: $fileName"
+                    } ?: run {
+                        adjuntarArchivoText.text = getString(R.string.adjuntar_Archivo) //
+                    }
                 }
             }
         }
     }
 
     private fun obtenerFechaActual(): String {
-        val formatoISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()) //
-        formatoISO.timeZone = TimeZone.getTimeZone("UTC") //
-        return formatoISO.format(Date()) //
+        val formatoISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        formatoISO.timeZone = TimeZone.getTimeZone("UTC")
+        return formatoISO.format(Date())
     }
 }

@@ -1,6 +1,10 @@
 package com.example.proyectomov
 
 import FactoryMethod.Gasto
+import FactoryMethod.Ingreso
+import FactoryMethod.GastoFactory
+import FactoryMethod.IngresoFactory
+import Services.TransactionService
 import UsuarioGlobal
 import android.content.Intent
 import android.os.Bundle
@@ -8,10 +12,10 @@ import android.util.Log
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.Button
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
@@ -19,19 +23,27 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import services.TransactionService
 import com.google.android.material.imageview.ShapeableImageView
-import org.json.JSONArray
+import internalStorage.NetworkUtils
+import internalStorage.TransactionRepository
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import FactoryMethod.GastoFactory
-import FactoryMethod.Ingreso
-import FactoryMethod.IngresoFactory
+import java.util.TimeZone
+
+import internalStorage.toDomainModel
+
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeParseException
 
 
 class Dashboard : AppCompatActivity() {
@@ -48,14 +60,18 @@ class Dashboard : AppCompatActivity() {
     private lateinit var recyclerViewTransacciones: RecyclerView
     private lateinit var textViewMontoTotalMes: TextView
     private lateinit var textViewLeyendaMes: TextView
-
+    private lateinit var offlineIndicator: TextView
 
     private val transactionService by lazy { TransactionService(this) }
-    private val gastoFactory = GastoFactory()
-    private val ingresoFactory = IngresoFactory()
+    private val gastoFactory = GastoFactory() //
+    private val ingresoFactory = IngresoFactory() //
 
-    private var listaGastos: MutableList<Gasto> = mutableListOf()
-    private var listaIngresos: MutableList<Ingreso> = mutableListOf()
+    private val transactionRepository: TransactionRepository by lazy {
+        TransactionRepository(applicationContext)
+    }
+
+    private var listaGastosAdapter: MutableList<Gasto> = mutableListOf()
+    private var listaIngresosAdapter: MutableList<Ingreso> = mutableListOf()
 
     private lateinit var gastoAdapter: GastoAdapter
     private lateinit var ingresoAdapter: IngresoAdapter
@@ -64,7 +80,7 @@ class Dashboard : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_dashboard)
+        setContentView(R.layout.activity_dashboard) //
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -72,35 +88,45 @@ class Dashboard : AppCompatActivity() {
             insets
         }
 
-        fabMain = findViewById(R.id.fab_main)
-        fabPerfil = findViewById(R.id.profile_picture)
-        fabOpciones = findViewById(R.id.app_icon)
-        menuOptions = findViewById(R.id.menu_options)
-        menuOptionsUser = findViewById(R.id.menu_options_pfp)
-        menuOptionsNav = findViewById(R.id.menu_options_main)
-        textViewMontoTotalMes = findViewById(R.id.amount)
-        textViewLeyendaMes = findViewById(R.id.title2)
+        fabMain = findViewById(R.id.fab_main) //
+        fabPerfil = findViewById(R.id.profile_picture) //
+        fabOpciones = findViewById(R.id.app_icon) //
+        menuOptions = findViewById(R.id.menu_options) //
+        menuOptionsUser = findViewById(R.id.menu_options_pfp) //
+        menuOptionsNav = findViewById(R.id.menu_options_main) //
+        textViewMontoTotalMes = findViewById(R.id.amount) //
+        textViewLeyendaMes = findViewById(R.id.title2) //
+        offlineIndicator = findViewById(R.id.offline_indicator) //
 
 
-        radioGroupTipoTransaccion = findViewById(R.id.radioGroupTipoTransaccion)
-        recyclerViewTransacciones = findViewById(R.id.recyclerViewTransacciones)
+        radioGroupTipoTransaccion = findViewById(R.id.radioGroupTipoTransaccion) //
+        recyclerViewTransacciones = findViewById(R.id.recyclerViewTransacciones) //
         recyclerViewTransacciones.layoutManager = LinearLayoutManager(this)
 
 
-        gastoAdapter = GastoAdapter(listaGastos, this::onGastoClicked)
-        ingresoAdapter = IngresoAdapter(listaIngresos, this::onIngresoClicked)
+        gastoAdapter = GastoAdapter(listaGastosAdapter, this::onGastoClicked)
+        ingresoAdapter = IngresoAdapter(listaIngresosAdapter, this::onIngresoClicked)
 
 
         cargarImagenPerfil()
         configurarListenersMenus()
         configurarRadioGroupListener()
 
-        cargarTransaccionesDelMesActual()
+        loadAndObserveData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::menuOptions.isInitialized) menuOptions.visibility = View.GONE
+        if (::menuOptionsUser.isInitialized) menuOptionsUser.visibility = View.GONE
+        if (::menuOptionsNav.isInitialized) menuOptionsNav.visibility = View.GONE
+
+        loadAndObserveData()
     }
 
     private fun cargarImagenPerfil() {
-        val profilePictureImageView = findViewById<ImageView>(R.id.profile_picture)
-        val fotoPerfilUrl = UsuarioGlobal.fotoPerfil
+        val profilePictureImageView = findViewById<ImageView>(R.id.profile_picture) //
+        val fotoPerfilUrl = UsuarioGlobal.fotoPerfil //
         Glide.with(this)
             .load(fotoPerfilUrl)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -110,44 +136,40 @@ class Dashboard : AppCompatActivity() {
     }
 
     private fun configurarListenersMenus() {
-        fabMain.setOnClickListener { toggleMenu(menuOptions, R.anim.slide_in_fade, R.anim.slide_out_fade) }
-        findViewById<Button>(R.id.btn_register_expense).setOnClickListener {
-            startActivity(Intent(this, RegisterGasto::class.java))
+        fabMain.setOnClickListener { toggleMenu(menuOptions, R.anim.slide_in_fade, R.anim.slide_out_fade) } //
+        findViewById<Button>(R.id.btn_register_expense).setOnClickListener { //
+            startActivity(Intent(this, RegisterGasto::class.java)) //
         }
-        findViewById<Button>(R.id.btn_register_income).setOnClickListener {
-            startActivity(Intent(this, RegisterIngreso::class.java))
+        findViewById<Button>(R.id.btn_register_income).setOnClickListener { //
+            startActivity(Intent(this, RegisterIngreso::class.java)) //
         }
 
-        fabPerfil.setOnClickListener { toggleMenu(menuOptionsUser, R.anim.slide_down_fade_in, R.anim.slide_up_fade_out) }
-        findViewById<Button>(R.id.btn_editar_usuario).setOnClickListener {
-            startActivity(Intent(this, UpdateUser::class.java))
+        fabPerfil.setOnClickListener { toggleMenu(menuOptionsUser, R.anim.slide_down_fade_in, R.anim.slide_up_fade_out) } //
+        findViewById<Button>(R.id.btn_editar_usuario).setOnClickListener { //
+            startActivity(Intent(this, UpdateUser::class.java)) //
         }
-        findViewById<Button>(R.id.btn_logOut).setOnClickListener {
-
-            UsuarioGlobal.id = null
-            UsuarioGlobal.token = null
-            val intent = Intent(this, LogIn::class.java)
+        findViewById<Button>(R.id.btn_logOut).setOnClickListener { //
+            UsuarioGlobal.id = null //
+            UsuarioGlobal.token = null //
+            val intent = Intent(this, LogIn::class.java) //
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
-
         }
 
-        fabOpciones.setOnClickListener { toggleMenu(menuOptionsNav, R.anim.slide_down_fade_in, R.anim.slide_up_fade_out) }
-
-        findViewById<Button>(R.id.btn_ver_gastos).setOnClickListener {
-            val intent = Intent(this, FiltrarTransacciones::class.java)
+        fabOpciones.setOnClickListener { toggleMenu(menuOptionsNav, R.anim.slide_down_fade_in, R.anim.slide_up_fade_out) } //
+        findViewById<Button>(R.id.btn_ver_gastos).setOnClickListener { //
+            val intent = Intent(this, FiltrarTransacciones::class.java) //
             intent.putExtra("TIPO_FILTRO", "gastos")
             startActivity(intent)
         }
-
-        findViewById<Button>(R.id.btn_ver_ingresos).setOnClickListener {
-            val intent = Intent(this, FiltrarTransacciones::class.java)
+        findViewById<Button>(R.id.btn_ver_ingresos).setOnClickListener { //
+            val intent = Intent(this, FiltrarTransacciones::class.java) //
             intent.putExtra("TIPO_FILTRO", "ingresos")
             startActivity(intent)
         }
-        findViewById<Button>(R.id.btn_reporte).setOnClickListener {
-            startActivity(Intent(this, Report::class.java))
+        findViewById<Button>(R.id.btn_reporte).setOnClickListener { //
+            startActivity(Intent(this, Report::class.java)) //
         }
     }
 
@@ -168,142 +190,235 @@ class Dashboard : AppCompatActivity() {
     }
 
     private fun configurarRadioGroupListener() {
-        radioGroupTipoTransaccion.setOnCheckedChangeListener { group, checkedId ->
-            cargarTransaccionesDelMesActual()
+        radioGroupTipoTransaccion.setOnCheckedChangeListener { _, _ ->
+            loadAndObserveData()
         }
     }
 
-    private fun cargarTransaccionesDelMesActual() {
-        val calendar = Calendar.getInstance()
-        val mesActual = calendar.get(Calendar.MONTH) + 1
-        val anioActual = calendar.get(Calendar.YEAR)
+    private fun loadAndObserveData() {
+        val userId = UsuarioGlobal.id //
+        if (userId.isNullOrEmpty()) {
+            Toast.makeText(this, "Error: Usuario no identificado.", Toast.LENGTH_LONG).show()
+            return
+        }
 
-        val tipoSeleccionado = if (radioGroupTipoTransaccion.checkedRadioButtonId == R.id.radioButtonGasto) {
+        val calendar = Calendar.getInstance()
+        val currentMonth = calendar.get(Calendar.MONTH) + 1
+        val currentYear = calendar.get(Calendar.YEAR)
+        textViewLeyendaMes.text = "${obtenerNombreMes(currentMonth - 1)}, $currentYear:"
+
+        val tipoSeleccionado = if (radioGroupTipoTransaccion.checkedRadioButtonId == R.id.radioButtonGasto) { //
             "gastos"
         } else {
             "ingresos"
         }
 
-        textViewLeyendaMes.text = "${obtenerNombreMes(mesActual-1)}, $anioActual:" // Actualiza leyenda
-
-        fetchTransacciones(tipoSeleccionado, mesActual, anioActual)
+        if (NetworkUtils.isNetworkAvailable(this)) { //
+            offlineIndicator.visibility = View.GONE //
+            // Toast.makeText(this, "Modo online: mostrando datos de la API.", Toast.LENGTH_SHORT).show()
+            fetchTotalAmountFromAPI(currentMonth, currentYear)
+            fetchTransactionsFromAPIForDashboard(userId, tipoSeleccionado, currentMonth, currentYear)
+        } else {
+            offlineIndicator.visibility = View.VISIBLE //
+            loadLocalTransactions(userId, tipoSeleccionado, currentMonth, currentYear)
+        }
     }
 
-    private fun fetchTransacciones(endpoint: String, mes: Int, anio: Int) {
-        val usuarioID = UsuarioGlobal.id
-        if (usuarioID.isNullOrEmpty()) {
-            Toast.makeText(this, "ID de usuario no disponible.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
+    private fun fetchTransactionsFromAPIForDashboard(userId: String, tipoApi: String, mes: Int, anio: Int) {
         val queryParams = mapOf(
-            "usuarioID" to usuarioID,
+            "usuarioID" to userId,
             "mes" to mes.toString(),
             "anio" to anio.toString(),
             "limite" to "6",
-            "pagina" to "1"
+            "ordenFecha" to "desc"
         )
 
-        transactionService.obtenerTransacciones(endpoint, queryParams,
+        transactionService.obtenerTransacciones(tipoApi, queryParams, //
             onSuccess = { response ->
                 try {
-                    val transaccionesJsonArray = response.getJSONArray(endpoint)
-                    val totalMontoMes = response.optDouble("totalMonto", 0.0)
+                    val transaccionesJsonArray = response.getJSONArray(tipoApi) // "gastos" or "ingresos" based on tipoApi
+                    if (tipoApi == "gastos") {
+                        listaGastosAdapter.clear()
+                        for (i in 0 until transaccionesJsonArray.length()) {
+                            val item = transaccionesJsonArray.getJSONObject(i)
+                            var actualIdUser = userId
+                            val idUserField = item.opt("Id_user")
+                            if (idUserField is JSONObject) {
+                                actualIdUser = idUserField.optString("_id", userId)
+                            } else if (idUserField is String && idUserField.isNotBlank()) {
+                                if (idUserField.startsWith("{")) {
+                                    try {
+                                        val jsonFromString = JSONObject(idUserField)
+                                        actualIdUser = jsonFromString.optString("_id", userId)
+                                    } catch (e: org.json.JSONException) {
+                                        Log.w("DashboardFetchList", "GASTOS - Id_user is a string but not valid JSON: $idUserField. Using general userId.")
+                                    }
+                                } else {
+                                    actualIdUser = idUserField
+                                }
+                            }
 
-                    if (endpoint == "gastos") {
-                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos recientes: $%.2f", totalMontoMes)
-                        parseAndDisplayGastos(transaccionesJsonArray)
-                    } else {
-                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos recientes: $%.2f", totalMontoMes)
-                        parseAndDisplayIngresos(transaccionesJsonArray)
-                    }
-
-                } catch (e: Exception) {
-                    Log.e("DashboardParse", "Error parseando $endpoint: ${e.message}")
-                    Toast.makeText(this, "Error al procesar $endpoint.", Toast.LENGTH_SHORT).show()
-                    // Limpiar lista en caso de error de parseo
-                    if (endpoint == "gastos") {
-                        listaGastos.clear()
+                            val gasto = gastoFactory.crearTransaccion( //
+                                transactionId = item.getString("_id"),
+                                idUser = actualIdUser,
+                                nombre = item.getString("Nombre"),
+                                descripcion = item.optString("Descripcion"),
+                                fecha = item.getString("Fecha"),
+                                monto = item.getDouble("Monto"),
+                                tipo = item.getString("Tipo"),
+                                archivo = item.optString("Archivo")
+                            ) as Gasto //
+                            listaGastosAdapter.add(gasto)
+                        }
                         gastoAdapter.notifyDataSetChanged()
-                    } else {
-                        listaIngresos.clear()
+                        recyclerViewTransacciones.adapter = gastoAdapter
+                    } else { // ingresos
+                        listaIngresosAdapter.clear()
+                        for (i in 0 until transaccionesJsonArray.length()) {
+                            val item = transaccionesJsonArray.getJSONObject(i)
+                            var actualIdUser = userId
+                            val idUserField = item.opt("Id_user")
+                            if (idUserField is JSONObject) {
+                                actualIdUser = idUserField.optString("_id", userId)
+                            } else if (idUserField is String && idUserField.isNotBlank()) {
+                                if (idUserField.startsWith("{")) {
+                                    try {
+                                        val jsonFromString = JSONObject(idUserField)
+                                        actualIdUser = jsonFromString.optString("_id", userId)
+                                    } catch (e: org.json.JSONException) {
+                                        Log.w("DashboardFetchList", "INGRESOS - Id_user is a string but not valid JSON: $idUserField. Using general userId.")
+                                    }
+                                } else {
+                                    actualIdUser = idUserField
+                                }
+                            }
+
+                            val ingreso = ingresoFactory.crearTransaccion( //
+                                transactionId = item.getString("_id"),
+                                idUser = actualIdUser,
+                                nombre = item.getString("Nombre"),
+                                descripcion = item.optString("Descripcion"),
+                                fecha = item.getString("Fecha"),
+                                monto = item.getDouble("Monto"),
+                                tipo = item.getString("Tipo"),
+                                archivo = item.optString("Archivo")
+                            ) as Ingreso //
+                            listaIngresosAdapter.add(ingreso)
+                        }
                         ingresoAdapter.notifyDataSetChanged()
+                        recyclerViewTransacciones.adapter = ingresoAdapter
                     }
-                    textViewMontoTotalMes.text = if (endpoint == "gastos") "Gastos recientes: $0.00" else "Ingresos recientes: $0.00"
+                } catch (e: Exception) {
+                    Log.e("DashboardFetchList", "Error parsing $tipoApi list from API: ${e.message}")
+                    Toast.makeText(this, "Error al cargar lista de $tipoApi desde API. Mostrando datos locales.", Toast.LENGTH_LONG).show()
+                    loadLocalTransactions(userId, tipoApi, mes, anio) // Fallback
                 }
             },
             onError = { errorMessage ->
-                Log.e("DashboardFetch", "Error obteniendo $endpoint: $errorMessage")
-                Toast.makeText(this, "Error al cargar $endpoint.", Toast.LENGTH_SHORT).show()
-                if (endpoint == "gastos") {
-                    listaGastos.clear()
-                    gastoAdapter.notifyDataSetChanged()
-                } else {
-                    listaIngresos.clear()
-                    ingresoAdapter.notifyDataSetChanged()
-                }
-                textViewMontoTotalMes.text = if (endpoint == "gastos") "Gastos del mes: $0.00" else "Ingresos del mes: $0.00"
+                Log.e("DashboardFetchList", "Error fetching $tipoApi list from API: $errorMessage")
+                Toast.makeText(this, "Error al cargar $tipoApi desde API: $errorMessage. Mostrando datos locales.", Toast.LENGTH_LONG).show()
+                loadLocalTransactions(userId, tipoApi, mes, anio) // Fallback
             }
         )
     }
 
-    private fun parseAndDisplayGastos(jsonArray: JSONArray) {
-        listaGastos.clear()
-        for (i in 0 until jsonArray.length()) {
-            val item = jsonArray.getJSONObject(i)
-            try {
-                val gasto = gastoFactory.crearTransaccion(
-                    idUser = item.optString("Id_user", UsuarioGlobal.id ?: ""),
-                    nombre = item.getString("Nombre"),
-                    descripcion = item.optString("Descripcion"),
-                    fecha = formatarFechaBonita(item.getString("FechaLocal")),
-                    monto = item.getDouble("Monto"),
-                    tipo = item.getString("Tipo"),
-                    archivo = item.optString("Archivo")
-                )
-                listaGastos.add(gasto as Gasto)
-            } catch (e: Exception) {
-                Log.e("DashboardFactory", "Error creando Gasto desde JSON: ${e.message} - JSON: $item")
+    private fun loadLocalTransactions(userId: String, tipoSeleccionado: String, currentMonth: Int, currentYear: Int) {
+        lifecycleScope.launch {
+            if (tipoSeleccionado == "gastos") {
+                transactionRepository.getGastos(userId).collectLatest { gastoEntities -> //
+                    val gastosDelMesDomain = gastoEntities.filter { entity ->
+                        isTransactionInMonthYear(entity.fecha, currentMonth, currentYear) //
+                    }.map { it.toDomainModel() } //
+
+                    listaGastosAdapter.clear()
+                    listaGastosAdapter.addAll(gastosDelMesDomain.take(6))
+                    gastoAdapter.notifyDataSetChanged()
+                    recyclerViewTransacciones.adapter = gastoAdapter
+
+                    val totalLocal = gastosDelMesDomain.sumOf { it.monto } //
+                    textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos del mes (Local): $%.2f", totalLocal)
+                }
+            } else { // ingresos
+                transactionRepository.getIngresos(userId).collectLatest { ingresoEntities -> //
+                    val ingresosDelMesDomain = ingresoEntities.filter { entity ->
+                        isTransactionInMonthYear(entity.fecha, currentMonth, currentYear) //
+                    }.map { it.toDomainModel() } //
+
+                    listaIngresosAdapter.clear()
+                    listaIngresosAdapter.addAll(ingresosDelMesDomain.take(6))
+                    ingresoAdapter.notifyDataSetChanged()
+                    recyclerViewTransacciones.adapter = ingresoAdapter
+                    val totalLocal = ingresosDelMesDomain.sumOf { it.monto } //
+                    textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos del mes (Local): $%.2f", totalLocal)
+                }
             }
         }
-        recyclerViewTransacciones.adapter = gastoAdapter
-        gastoAdapter.notifyDataSetChanged()
     }
 
-    private fun parseAndDisplayIngresos(jsonArray: JSONArray) {
-        listaIngresos.clear()
-        for (i in 0 until jsonArray.length()) {
-            val item = jsonArray.getJSONObject(i)
+    private fun isTransactionInMonthYear(transactionDateStr: String, month: Int, year: Int): Boolean {
+        try {
+            // Handles ISO 8601 with or without milliseconds, and with Z or offset
+            val odt = OffsetDateTime.parse(transactionDateStr)
+            val zonedDateTimeUTC = odt.atZoneSameInstant(ZoneId.of("UTC"))
+            // Log.d("DateDebug", "Original: \"$transactionDateStr\", ParsedMonth UTC: ${zonedDateTimeUTC.monthValue}, ParsedYear UTC: ${zonedDateTimeUTC.year}")
+            return zonedDateTimeUTC.monthValue == month && zonedDateTimeUTC.year == year
+        } catch (e: DateTimeParseException) {
+            Log.e("DashboardDateParse", "Error parseando fecha con OffsetDateTime: \"$transactionDateStr\"", e)
+            // Fallback for dates like "YYYY-MM-DD" without time/offset, assuming they are local and intended for UTC comparison
             try {
-                val ingreso = ingresoFactory.crearTransaccion(
-                    idUser = item.optString("Id_user", UsuarioGlobal.id ?: ""),
-                    nombre = item.getString("Nombre"),
-                    descripcion = item.optString("Descripcion"),
-                    fecha = formatarFechaBonita(item.getString("FechaLocal")),
-                    monto = item.getDouble("Monto"),
-                    tipo = item.getString("Tipo"),
-                    archivo = item.optString("Archivo")
-                )
-                listaIngresos.add(ingreso as Ingreso)
-            } catch (e: Exception) {
-                Log.e("DashboardFactory", "Error creando Ingreso desde JSON: ${e.message} - JSON: $item")
+                val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC") // Assume dates without time are UTC midnight
+                val date = simpleDateFormat.parse(transactionDateStr)
+                if (date != null) {
+                    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                    cal.time = date
+                    // Log.d("DateDebugFallback", "Fallback ParsedMonth UTC: ${cal.get(Calendar.MONTH) + 1}, Fallback ParsedYear UTC: ${cal.get(Calendar.YEAR)}")
+                    return (cal.get(Calendar.MONTH) + 1) == month && cal.get(Calendar.YEAR) == year
+                }
+            } catch (e2: Exception) {
+                Log.e("DashboardDateParse", "Error en fallback de parseo de fecha: \"$transactionDateStr\"", e2)
             }
-        }
-        recyclerViewTransacciones.adapter = ingresoAdapter
-        ingresoAdapter.notifyDataSetChanged()
-    }
-
-    private fun formatarFechaBonita(fechaISO: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
-            val date = inputFormat.parse(fechaISO)
-            val outputFormat = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
-            date?.let { outputFormat.format(it) } ?: fechaISO
+            return false
         } catch (e: Exception) {
-            Log.e("DateParseError", "Error formateando fecha: $fechaISO", e)
-            fechaISO.substringBefore("T")
+            Log.e("DashboardDateParse", "Error genérico procesando fecha: \"$transactionDateStr\"", e)
+            return false
         }
     }
+
+    private fun fetchTotalAmountFromAPI(mes: Int, anio: Int) {
+        val userId = UsuarioGlobal.id ?: return //
+        val endpoint = if (radioGroupTipoTransaccion.checkedRadioButtonId == R.id.radioButtonGasto) "gastos" else "ingresos" //
+
+        val queryParams = mapOf(
+            "usuarioID" to userId,
+            "mes" to mes.toString(),
+            "anio" to anio.toString()
+        )
+
+        transactionService.obtenerTransacciones(endpoint, queryParams, //
+            onSuccess = { response ->
+                try {
+                    val totalMontoMes = response.optDouble("totalMonto", 0.0)
+                    if (endpoint == "gastos") {
+                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Gastos del mes: $%.2f", totalMontoMes)
+                    } else {
+                        textViewMontoTotalMes.text = String.format(Locale.getDefault(), "Ingresos del mes: $%.2f", totalMontoMes)
+                    }
+                } catch (e: Exception) {
+                    Log.e("DashboardFetchTotal", "Error parsing total from API for $endpoint: ${e.message}")
+                    // If API fails to give total, try to calculate from local if needed, or show error
+                    Toast.makeText(this, "Error al obtener total de API. Mostrando total local si es posible.", Toast.LENGTH_SHORT).show()
+                    loadLocalTransactions(userId, endpoint, mes, anio) // Recalculate with local as fallback
+                }
+            },
+            onError = { errorMessage ->
+                Log.e("DashboardFetchTotal", "Error fetching total from API for $endpoint: $errorMessage")
+                Toast.makeText(this, "Error al obtener total de API: $errorMessage. Mostrando total local.", Toast.LENGTH_LONG).show()
+                loadLocalTransactions(userId, endpoint, mes, anio) // Fallback to local total calculation
+            }
+        )
+    }
+
 
     private fun obtenerNombreMes(monthIndex: Int): String {
         val meses = arrayOf(
@@ -313,9 +428,9 @@ class Dashboard : AppCompatActivity() {
         return if (monthIndex in meses.indices) meses[monthIndex] else ""
     }
 
-    private fun onGastoClicked(gasto: Gasto) {
-        val intent = Intent(this, DetalleGasto::class.java).apply {
-            putExtra("gastoId", gasto.idUser)
+    private fun onGastoClicked(gasto: Gasto) { //
+        val intent = Intent(this, DetalleGasto::class.java).apply { //
+            putExtra("EXTRA_TRANSACTION_ID", gasto.transactionId)
             putExtra("nombre", gasto.nombre)
             putExtra("monto", gasto.monto.toString())
             putExtra("fecha", gasto.fecha)
@@ -326,9 +441,9 @@ class Dashboard : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun onIngresoClicked(ingreso: Ingreso) {
-        val intent = Intent(this, DetalleIngreso::class.java).apply {
-            putExtra("ingresoId", ingreso.idUser)
+    private fun onIngresoClicked(ingreso: Ingreso) { //
+        val intent = Intent(this, DetalleIngreso::class.java).apply { //
+            putExtra("EXTRA_TRANSACTION_ID", ingreso.transactionId)
             putExtra("nombre", ingreso.nombre)
             putExtra("monto", ingreso.monto.toString())
             putExtra("fecha", ingreso.fecha)

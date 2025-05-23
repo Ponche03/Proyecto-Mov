@@ -8,8 +8,18 @@ class GastoFactory : TransaccionFactory {
         fecha: String,
         monto: Double,
         tipo: String?,
-        archivo: String?
+        archivo: String?,
+        transactionId: String?
     ): Transaccion {
-        return Gasto(idUser, nombre, descripcion, fecha, monto, tipo, archivo)
+        return Gasto(
+            transactionId = transactionId,
+            idUser = idUser,
+            nombre = nombre,
+            descripcion = descripcion,
+            fecha = fecha,
+            monto = monto,
+            tipo = tipo,
+            archivo = archivo
+        )
     }
 }

@@ -1,4 +1,5 @@
-package services
+
+package Services
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
@@ -13,7 +14,7 @@ class FirebaseStorageService {
         onSuccess: (downloadUrl: String) -> Unit,
         onFailure: (errorMessage: String) -> Unit
     ) {
-        // Crea una referencia única para el archivo usando un UUID
+
         val fileName = "${UUID.randomUUID()}"
         val storageRef = storageInstance.reference.child("$storagePath/$fileName")
 
@@ -33,9 +34,7 @@ class FirebaseStorageService {
                 onFailure("Error al subir imagen: ${exception.message}")
             }
             .addOnProgressListener { taskSnapshot ->
-                // Opcional: puedes usar esto para mostrar el progreso de la subida
-                // val progress = (100.0 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount)
-                // Log.d("FirebaseStorageService", "Upload is $progress% done")
+
             }
     }
 }

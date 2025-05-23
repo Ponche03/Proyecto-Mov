@@ -2,20 +2,27 @@ package com.example.proyectomov
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log // Import Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope // Import lifecycleScope
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.android.volley.Request
+import internalStorage.TransactionRepository // Import TransactionRepository
+import kotlinx.coroutines.launch // Import launch
 import org.json.JSONObject
 
 class LogIn : AppCompatActivity() {
 
     private lateinit var emailEdit: EditText
     private lateinit var passwordEdit: EditText
+    private val transactionRepository: TransactionRepository by lazy {
+        TransactionRepository(applicationContext)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +65,6 @@ class LogIn : AppCompatActivity() {
 
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
-                // Llenar UsuarioGlobal
                 UsuarioGlobal.id = user?.optString("_id")
                 UsuarioGlobal.nombreCompleto = user?.optString("nombre")
                 UsuarioGlobal.nombreUsuario = user?.optString("usuario")
@@ -66,16 +72,48 @@ class LogIn : AppCompatActivity() {
                 UsuarioGlobal.fotoPerfil = user?.optString("foto_perfil")
                 UsuarioGlobal.token = token
 
-                val intent = Intent(this, Dashboard::class.java)
-                startActivity(intent)
+                // Start data synchronization
+                UsuarioGlobal.id?.let { userId ->
+                    if (userId.isNotEmpty()) {
+                        lifecycleScope.launch {
+                            try {
+                                Log.d("LogInSync", "Attempting to sync data for user: $userId")
+                                transactionRepository.synchronizeUserData(userId)
+                                Log.d("LogInSync", "Synchronization process initiated for user: $userId")
+                            } catch (e: Exception) {
+                                Log.e("LogInSync", "Error during initial data sync: ${e.message}", e)
+                                Toast.makeText(this@LogIn, "Error syncing data. Proceeding...", Toast.LENGTH_LONG).show()
+                            }
+
+                            val intent = Intent(this@LogIn, Dashboard::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+                    } else {
+                        Log.e("LogInSync", "User ID is empty, cannot sync.")
+                        val intent = Intent(this@LogIn, Dashboard::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                } ?: run {
+                    Log.e("LogInSync", "User ID is null, cannot sync.")
+                    val intent = Intent(this@LogIn, Dashboard::class.java)
+                    startActivity(intent)
+                    finish()
+                }
             },
             { error ->
-                val errorMessage = error.message ?: "Error de red o servidor"
+                val errorMessage = try {
+                    val responseBody = String(error.networkResponse.data, Charsets.UTF_8)
+                    val jsonError = JSONObject(responseBody)
+                    jsonError.optString("message", error.message ?: "Error desconocido")
+                } catch (e: Exception) {
+                    error.message ?: "Error de red o servidor"
+                }
                 Toast.makeText(this, "Error: $errorMessage", Toast.LENGTH_LONG).show()
             })
 
         val queue = Volley.newRequestQueue(this)
         queue.add(request)
     }
-
 }
