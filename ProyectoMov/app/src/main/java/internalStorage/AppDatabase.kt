@@ -4,12 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import internalStorage.GastoDao
-import internalStorage.IngresoDao
-import internalStorage.GastoEntity
-import internalStorage.IngresoEntity
 
-@Database(entities = [GastoEntity::class, IngresoEntity::class], version = 1, exportSchema = false)
+
+@Database(entities = [GastoEntity::class, IngresoEntity::class], version = 2, exportSchema = false)
 public abstract class AppDatabase : RoomDatabase() {
     abstract fun gastoDao(): GastoDao
     abstract fun ingresoDao(): IngresoDao
@@ -25,7 +22,7 @@ public abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "money_flow_database"
                 )
-
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

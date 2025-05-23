@@ -32,4 +32,11 @@ interface IngresoDao {
 
     @Query("DELETE FROM ingresos WHERE localId = :localId")
     suspend fun deleteIngresoByLocalId(localId: Long)
+
+    // New methods for synchronization
+    @Query("DELETE FROM ingresos WHERE idUser = :userId")
+    suspend fun clearAllForUser(userId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(ingresos: List<IngresoEntity>)
 }

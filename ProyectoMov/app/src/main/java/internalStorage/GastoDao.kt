@@ -32,4 +32,11 @@ interface GastoDao {
 
     @Query("DELETE FROM gastos WHERE localId = :localId")
     suspend fun deleteGastoByLocalId(localId: Long)
+
+    // New methods for synchronization
+    @Query("DELETE FROM gastos WHERE idUser = :userId")
+    suspend fun clearAllForUser(userId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(gastos: List<GastoEntity>)
 }

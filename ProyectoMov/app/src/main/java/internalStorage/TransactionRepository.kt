@@ -244,6 +244,97 @@ class TransactionRepository(private val context: Context) {
         return ingresoDao.getIngresosByUser(userId) //
     }
 
+    // New function to synchronize all user data from server
+    suspend fun synchronizeUserData(userId: String) {
+        if (!NetworkUtils.isNetworkAvailable(context)) {
+            Log.w("RepositorySync", "Network not available, cannot perform initial sync for user $userId.")
+            // Optionally, you might want to inform the user or rely on the SyncTransactionWorker
+            // to eventually fetch data when the network is back.
+            // For an initial login sync, it's often better to try, and if it fails,
+            // the app will operate with whatever is in the local DB (which would be empty for a new user).
+            return
+        }
+
+        Log.d("RepositorySync", "Starting data synchronization for user $userId")
+
+        // Sync Gastos
+        transactionService.obtenerTransacciones(
+            endpoint = "gastos",
+            queryParams = mapOf("usuarioID" to userId),
+            onSuccess = { response ->
+                repositoryScope.launch {
+                    try {
+                        val gastosJsonArray = response.getJSONArray("gastos")
+                        val gastoEntities = mutableListOf<GastoEntity>()
+                        for (i in 0 until gastosJsonArray.length()) {
+                            val item = gastosJsonArray.getJSONObject(i)
+                            val gastoEntity = GastoEntity(
+                                transactionId = item.getString("_id"),
+                                idUser = item.optString("Id_user", userId),
+                                nombre = item.getString("Nombre"),
+                                descripcion = item.optString("Descripcion"),
+                                fecha = item.getString("FechaLocal"),
+                                monto = item.getDouble("Monto"),
+                                tipo = item.getString("Tipo"),
+                                archivo = item.optString("Archivo"),
+                                isSynced = true,
+                                pendingAction = null
+                            )
+                            gastoEntities.add(gastoEntity)
+                        }
+                        gastoDao.clearAllForUser(userId)
+                        gastoDao.insertAll(gastoEntities)
+                        Log.d("RepositorySync", "Successfully synced ${gastoEntities.size} gastos for user $userId.")
+                    } catch (e: Exception) {
+                        Log.e("RepositorySync", "Error processing/saving gastos from server for user $userId: ${e.message}", e)
+                    }
+                }
+            },
+            onError = { errorMessage ->
+                Log.e("RepositorySync", "Error fetching gastos from server for user $userId: $errorMessage")
+            }
+        )
+
+        // Sync Ingresos
+        transactionService.obtenerTransacciones(
+            endpoint = "ingresos",
+            queryParams = mapOf("usuarioID" to userId),
+            onSuccess = { response ->
+                repositoryScope.launch {
+                    try {
+                        val ingresosJsonArray = response.getJSONArray("ingresos")
+                        val ingresoEntities = mutableListOf<IngresoEntity>()
+                        for (i in 0 until ingresosJsonArray.length()) {
+                            val item = ingresosJsonArray.getJSONObject(i)
+                            val ingresoEntity = IngresoEntity(
+                                transactionId = item.getString("_id"),
+                                idUser = item.optString("Id_user", userId),
+                                nombre = item.getString("Nombre"),
+                                descripcion = item.optString("Descripcion"),
+                                fecha = item.getString("FechaLocal"),
+                                monto = item.getDouble("Monto"),
+                                tipo = item.getString("Tipo"),
+                                archivo = item.optString("Archivo"),
+                                isSynced = true,
+                                pendingAction = null
+                            )
+                            ingresoEntities.add(ingresoEntity)
+                        }
+                        ingresoDao.clearAllForUser(userId)
+                        ingresoDao.insertAll(ingresoEntities)
+                        Log.d("RepositorySync", "Successfully synced ${ingresoEntities.size} ingresos for user $userId.")
+                    } catch (e: Exception) {
+                        Log.e("RepositorySync", "Error processing/saving ingresos from server for user $userId: ${e.message}", e)
+                    }
+                }
+            },
+            onError = { errorMessage ->
+                Log.e("RepositorySync", "Error fetching ingresos from server for user $userId: $errorMessage")
+            }
+        )
+    }
+
+
     // --- Helper to convert Entity to Domain model for TransactionService ---
     private fun GastoEntity.toDomain(): FactoryMethod.Gasto { //
         return FactoryMethod.Gasto( //
